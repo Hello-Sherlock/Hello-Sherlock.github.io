@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+    <!-- 
+        © Material Theme
+        https://github.com/viosey/hexo-theme-material
+        Version: 1.3.0 -->
+
+    <!-- Title -->
+    
+    <title>
+        
+            OSX内核调试 | 
+        
+        Hello-Sherlock
+    </title>
+
+    <!-- Favicons -->
+    <link rel="icon shortcut" type="image/ico" href="/img/favicon.png">
+    <link rel="icon" sizes="192x192" href="/img/favicon.png">
+    <link rel="apple-touch-icon" href="/img/favicon.png">
+
+    <!-- Meta & Info -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0097A7">
+    <meta name="author" content="凌迟">
+    <meta name="description" content="学习总结 思考感悟">
+    <meta name="keywords" content="null,OSX">
+
+    <!--iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-title" content="Title">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="480">
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Hello-Sherlock">
+
+    <!-- The Open Graph protocol -->
+    <meta property="og:url" content="http://Hello-Sherlock.github.io">
+    <meta property="og:type" content="blog">
+    <meta property="og:title" content="OSX内核调试 | Hello-Sherlock">
+    <meta property="og:description" content="学习总结 思考感悟">
+    <meta property="og:article:tag" content="OSX"> 
+
+    <!--[if lte IE 9]>
+        <link rel="stylesheet" href="/css/ie-blocker.css">
+
+        
+            <script src="/js/ie-blocker.zhCN.js"></script>
+        
+    <![endif]-->
+
+    <!-- Import CSS -->
+    <link rel="stylesheet" href="../../../../css/material.min.css">
+    <link rel="stylesheet" href="../../../../css/style.min.css">
+    <!-- Config CSS -->
+
+
+<!-- Other Styles -->
+<style>
+  body, html {
+    font-family: Roboto, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  }
+
+  a {
+    color: #00838F;
+  }
+
+  .mdl-card__media,
+  #search-label,
+  #search-form-label:after,
+  #scheme-Paradox .hot_tags-count,
+  #scheme-Paradox .sidebar_archives-count,
+  #scheme-Paradox .sidebar-colored .sidebar-header,
+  #scheme-Paradox .sidebar-colored .sidebar-badge{
+    background-color: #0097A7 !important;
+  }
+
+  /* Sidebar User Drop Down Menu Text Color */
+  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:hover,
+  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:focus {
+    color: #0097A7 !important;
+  }
+
+  #post_entry-right-info,
+  .sidebar-colored .sidebar-nav li:hover > a,
+  .sidebar-colored .sidebar-nav li:hover > a i,
+  .sidebar-colored .sidebar-nav li > a:hover,
+  .sidebar-colored .sidebar-nav li > a:hover i,
+  .sidebar-colored .sidebar-nav li > a:focus i,
+  .sidebar-colored .sidebar-nav > .open > a,
+  .sidebar-colored .sidebar-nav > .open > a:hover,
+  .sidebar-colored .sidebar-nav > .open > a:focus,
+  #ds-reset #ds-ctx .ds-ctx-entry .ds-ctx-head a {
+    color: #0097A7 !important;
+  }
+
+  .toTop {
+    background: #757575 !important;
+  }
+
+  .material-layout .material-post>.material-nav,
+  .material-layout .material-index>.material-nav,
+  .material-nav a {
+    color: #757575;
+  }
+
+  #scheme-Paradox .MD-burger-layer {
+    background-color: #757575;
+  }
+
+  #scheme-Paradox #post-toc-trigger-btn {
+    color: #757575;
+  }
+
+  .post-toc a:hover {
+    color: #00838F;
+    text-decoration: underline;
+  }
+</style>
+
+
+<!-- Theme Background Related-->
+
+    <style>
+      body{
+        background-color: #F5F5F5;
+      }
+
+      /* blog_info bottom background */
+      #scheme-Paradox .material-layout .something-else .mdl-card__supporting-text{
+        background-color: #fff;
+      }
+    </style>
+
+
+
+
+<!-- Fade Effect -->
+
+    <style>
+      .fade {
+        transition: all 800ms linear;
+        -webkit-transform: translate3d(0,0,0);
+        -moz-transform: translate3d(0,0,0);
+        -ms-transform: translate3d(0,0,0);
+        -o-transform: translate3d(0,0,0);
+        transform: translate3d(0,0,0);
+        opacity: 1;
+      }
+
+      .fade.out{
+        opacity: 0;
+      }
+    </style>
+
+
+
+    <script src="../../../../js/jquery.min.js"></script>
+    <script src="../../../../js/queue.js"></script>
+
+    <!-- UC Browser Compatible -->
+    <script>
+        var agent = navigator.userAgent.toLowerCase();
+        if(agent.indexOf('ucbrowser')>0) {
+            document.write("<link rel=\"stylesheet\" href=\"../../../../css/uc.css\">");
+            alert('由于 UC 浏览器使用极旧的内核，而本网站使用了一些新的特性。\n为了您能更好的浏览，推荐使用 Chrome 或 Firefox 浏览器。');
+        }
+    </script>
+
+    
+
+    
+
+    <!-- Bing Background -->
+    
+
+    <!-- Custom Head -->
+    
+</head>
+
+
+    
+        <body id="scheme-Paradox" class="lazy">
+            <div class="material-layout  mdl-js-layout has-drawer is-upgraded">
+                
+
+                <!-- Main Container -->
+                <main class="material-layout__content" id="main">
+
+                    <!-- Top Anchor -->
+                    <div id="top"></div>
+
+                    
+                        <!-- Hamburger Button -->
+                        <button class="MD-burger-icon sidebar-toggle">
+                            <span class="MD-burger-layer"></span>
+                        </button>
+                    
+
+                    <!-- Post TOC -->
+
+    
+    <!-- Back Button -->
+    <!--
+    <div class="material-back" id="backhome-div" tabindex="0">
+        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon"
+           href="#" onclick="window.history.back();return false;"
+           target="_self"
+           role="button"
+           data-upgraded=",MaterialButton,MaterialRipple">
+            <i class="material-icons" role="presentation">arrow_back</i>
+            <span class="mdl-button__ripple-container">
+                <span class="mdl-ripple"></span>
+            </span>
+        </a>
+    </div>
+    -->
+
+    <!-- Left aligned menu below button -->
+    <button id="post-toc-trigger-btn"
+        class="mdl-button mdl-js-button mdl-button--icon">
+        <i class="material-icons">format_list_numbered</i>
+    </button>
+
+    <ul class="post-toc-wrap mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" for="post-toc-trigger-btn">
+        <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#搭建OSX调试环境"><span class="post-toc-number">1.</span> <span class="post-toc-text">搭建OSX调试环境</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#进行内核调试"><span class="post-toc-number">2.</span> <span class="post-toc-text">进行内核调试</span></a></li></ol>
+
+        <!--
+        <li class="mdl-menu__item">
+            Some Action
+        </li>
+        -->
+    </ul>
+
+
+
+
+<!-- Layouts -->
+
+    <!-- Post Module -->
+    <div class="material-post_container">
+
+        <div class="material-post mdl-grid">
+            <div class="mdl-card mdl-shadow--4dp mdl-cell mdl-cell--12-col">
+
+                <!-- Post Header(Thumbnail & Title) -->
+                
+    <!-- Paradox Post Header -->
+    
+        
+            <!-- Random Thumbnail -->
+            <div class="post_thumbnail-random mdl-card__media mdl-color-text--grey-50">
+            <script>
+    var randomNum = Math.floor(Math.random() * 19 + 1);
+
+    $('.post_thumbnail-random').css('background-image', 'url(' + '/img/random/material-' + randomNum + '.png' + ')');
+</script>
+
+        
+    
+            <p class="article-headline-p">
+                OSX内核调试
+            </p>
+        </div>
+
+
+
+
+
+                
+                    <!-- Paradox Post Info -->
+                    <div class="mdl-color-text--grey-700 mdl-card__supporting-text meta">
+
+    <!-- Author Avatar -->
+    <div id="author-avatar">
+        <img src="/img/avatar.png" width="44px" height="44px" alt="Author Avatar"/>
+    </div>
+    <!-- Author Name & Date -->
+    <div>
+        <strong>凌迟</strong>
+        <span>12月 15, 2016</span>
+    </div>
+
+    <div class="section-spacer"></div>
+
+    <!-- Favorite -->
+    <!--
+        <button id="article-functions-like-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon btn-like">
+            <i class="material-icons" role="presentation">favorite</i>
+            <span class="visuallyhidden">favorites</span>
+        </button>
+    -->
+
+    <!-- Qrcode -->
+    
+        <button id="article-functions-qrcode-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+            <i class="material-icons" role="presentation">devices other</i>
+            <span class="visuallyhidden">devices other</span>
+        </button>
+        <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-qrcode-button">
+            <li class="mdl-menu__item">在其它设备中阅读本文章</li>
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPYAAAD2CAAAAADAeSUUAAAC1UlEQVR42u3aQXLCMAwFUO5/6XbbGQb4kpwC9suKKUnw86Ia6fv2c+R1w8bGxsbGxsbGxv5I9i2+7u//+5f7z89/5dGzkzsfPYuNjY19AvvFv/6nsMnSk3c+X09+DzY2NvYJ7Opyk6LV+61JMcPGxsbGjl4xvvItw8bGxsa+roBNxkPVZgMbGxsbe9VQKR/959/2ita/ztKwsbGxP57dax7e+/kN+TY2Njb2R7IXHGoMSlfvqaRQFdaJjY2NvSl7PvrPj/hMjnVOwmNsbGzsvdl52UhKVF548l9Mvo3CY2xsbOyt2dXBTb64pPHIy2f+tsJQCRsbG/vL2Wvj1bypqIbNk0gDGxsbe2/2hFFtRSbHLhcc38TGxsbelF0dJFWXWx3rrx08YWNjY5/A7sWxeaxbfX/12cI7sbGxsbdmrwXn7+xFBc0mBxsbG3tTdjXKrcau1YFUXsCSMoyNjY19ArsXvk6O4FTL1Xw7sLGxsc9hVw8+9pqT5/FtLzwYFTBsbGzsLdi9MlONhPMWokxK/oKNjY29Kbs3MFp1KCffgvwQz4J4ABsbG/ur2NWy0RsPJa1OtSgmK8HGxsY+gV09Inn1gZte89NsRbCxsbG3YE9G9tWWprodSdMyqtvY2NjYW7AnjUfv4GZ1rD8ZUWFjY2Ofxq6O4HvBcDUqqLZA2NjY2Geyq3Fvjqk+mxfIajiNjY2NvTd7Mu7JA+Bea5EHAy/eg42NjX0A+4q4N49m80JYXRU2Njb23ux5vJrHvXmc3IsNXtyJjY2NvSm7Whjyz/mhyTxmSLZpwSwNGxsb+wvZSdGal6heDNArYNjY2NhnstcWrV60kI+0Lgx6sbGxsQ9g9wpM8tTkYFB5qISNjY19JDsJCfLyk8fJ+XZfUsCwsbGxv4SdDJV6387LUvU4ETY2NvZp7HnQ24t4802sFlRsbGzsc9jnXNjY2NjY2NjY2Ngfc/0CBILDpkSDVZwAAAAASUVORK5CYII=">
+        </ul>
+    
+
+    <!-- Tags (bookmark) -->
+    
+    <button id="article-functions-viewtags-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+        <i class="material-icons" role="presentation">bookmark</i>
+        <span class="visuallyhidden">bookmark</span>
+    </button>
+    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-viewtags-button">
+        <li class="mdl-menu__item">
+        <a class="post_tag-link" href="../../../../tags/OSX/">OSX</a>
+    </ul>
+    
+
+    <!-- Share -->
+    <button id="article-fuctions-share-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+    <i class="material-icons" role="presentation">share</i>
+    <span class="visuallyhidden">share</span>
+</button>
+<ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-fuctions-share-button">
+    
+
+    
+
+    <!-- Share Weibo -->
+    
+        <a class="post_share-link" href="http://service.weibo.com/share/share.php?appkey=&title=OSX内核调试&url=http://Hello-Sherlock.github.io/&pic=&searchPic=false&style=simple" target="_blank">
+            <li class="mdl-menu__item">
+                分享到微博
+            </li>
+        </a>
+    
+
+    <!-- Share Twitter -->
+    
+        <a class="post_share-link" href="https://twitter.com/intent/tweet?text=OSX内核调试&url=http://Hello-Sherlock.github.io/&via=凌迟" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Twitter
+            </li>
+        </a>
+    
+
+    <!-- Share Facebook -->
+    
+        <a class="post_share-link" href="https://www.facebook.com/sharer/sharer.php?u=http://Hello-Sherlock.github.io/" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Facebook
+            </li>
+        </a>
+    
+
+    <!-- Share Google+ -->
+    
+        <a class="post_share-link" href="https://plus.google.com/share?url=http://Hello-Sherlock.github.io/" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Google+
+            </li>
+        </a>
+    
+
+    <!-- Share LinkedIn -->
+    
+        <a class="post_share-link" href="https://www.linkedin.com/shareArticle?mini=true&url=http://Hello-Sherlock.github.io/&title=OSX内核调试" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 LinkedIn
+            </li>
+        </a>
+    
+
+    <!-- Share QQ -->
+    
+        <a class="post_share-link" href="http://connect.qq.com/widget/shareqq/index.html?site=Hello-Sherlock&title=OSX内核调试&summary=学习总结 思考感悟&pics=http://Hello-Sherlock.github.io/img/favicon.png&url=http://Hello-Sherlock.github.io" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 QQ
+            </li>
+        </a>
+    
+
+    <!-- Share Telegram -->
+    
+        <a class="post_share-link" href="https://telegram.me/share/url?url=http://Hello-Sherlock.github.io/&text=OSX内核调试" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Telegram
+            </li>
+        </a>
+    
+</ul>
+
+</div>
+
+                
+
+                <!-- Post Content -->
+                <div id="post-content" class="mdl-color-text--grey-700 mdl-card__supporting-text fade out">
+    
+        <h2 id="搭建OSX调试环境"><a href="#搭建OSX调试环境" class="headerlink" title="搭建OSX调试环境"></a>搭建OSX调试环境</h2><ol>
+<li>VMware8.5.1</li>
+<li>Kernel_Debug_Kit10.11.4build_15E65</li>
+<li>Install El Capitan 10.11.4 (15E65)</li>
+</ol>
+<a id="more"></a>
+<p>这里现在Mac上安装VM，在装虚拟机的过程中遇到了个坑，因为是8.x的VM，所以运行OSX系统时会出现<code>与vmmon模块的版本不匹配，需要308.0，现有304.0</code> ，网上找了很多方法也没办法解决，最后重启了一遍电脑竟然可以了。</p>
+<p>紧接着就是在本机和虚拟机中安装KDK</p>
+<blockquote>
+<p><strong>Kernel Debug Kit是苹果官方提供的调试工具包,每一个正式的系统中都会有对应的KDK,下载地址在<a href="https://developer.apple.com/downloads/" target="_blank" rel="external">这里</a></strong></p>
+</blockquote>
+<p>下载了对应版本的kdk后，在虚拟机中和本机中都要安装这个KDK，安装后的目录在<code>/Library/Developer/KDKs/Kernel_Debug_Kit_10.11.4_build_15E65</code>中</p>
+<p>在OSX中，内核的可执行文件位于<code>/Systems/Library/Kernels</code>下，所以我们只需要在KDK安装目录的可执行文件下找到<code>kernel.development</code>可执行文件，复制到<code>/Systems/Library/Kernels</code> 即可，但是OSX使用了 <strong>“rootless”</strong> 的机制，所以我们可能无法复制，这时我们需要关闭系统完整性保护机制，如何做呢？我们首先要在虚拟机中重启，然后立即按住<code>option+command+R</code>，直到出现🌐地球，然后我们顶部找到终端，打开后输入<code>csrutil disable</code>，即可关闭，然后再重启，就可以复制了。</p>
+<p>复制后我们要设置系统调试参数:</p>
+<p><code>sudo nvram boot-args=&quot;debug=0x141 kext-dev-mode=1 kcsuffix=development pmuflags=1 -v&quot;</code></p>
+<p>关于这些参数</p>
+<ol>
+<li><code>debug=0x141</code>启用了远程调试模式</li>
+<li><code>kext-dev-mode=1</code>可以用来加载未签名的kext文件（kext文件：Mac OSX的内核扩展，通常用于设备驱动程序）</li>
+<li><code>kcsuffix=development</code>我们之前复制的是kernel.development文件，这里允许我们根据这个文件进行引导内核发展</li>
+<li><code>pmuflags=1</code>禁止看门狗定时器</li>
+<li><code>-v</code> 内核调试的时候会有一些有用的信息</li>
+</ol>
+<p>这时我们就要看看虚拟机网络配置以至于接下来远程连接到它</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/B5C02EBEC1AE2212BD1996E2FFE4F98C.jpg" alt="B5C02EBEC1AE2212BD1996E2FFE4F98C"></p>
+<p>这里Mac地址<code>00:0c:29:1b:7d:f0</code> 和IP地址<code>192.168.174.129</code>是要记住的</p>
+<p>由于我们要进行新的内核调试，所以我们要设置kext缓存为无效</p>
+<p><code>sudo kextcache -invalidate</code></p>
+<h2 id="进行内核调试"><a href="#进行内核调试" class="headerlink" title="进行内核调试"></a>进行内核调试</h2><p>我们首先在虚拟机上启动lldb</p>
+<p>然后创建内核调试任务</p>
+<p><code>target create /Library/Developer/KDKs/KDK_10.11.4_15E65.kdk/System/Library/Kernels/kernel.development</code></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/09ED67D25ECEA5C31E9BA548ECBE74EE.jpg" alt="09ED67D25ECEA5C31E9BA548ECBE74EE"></p>
+<p>然后我们重启虚拟机，等开机会就会看到提示远程连接的信息</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161215-3@2x.jpg" alt="QQ20161215-3@2x"></p>
+<p>这时候我们就开始在主机上远程连接了，还记得之前我们要记住的mac地址和ip地址吗？</p>
+<p>我们在主机上启动lldb</p>
+<p><code>kdp-remote 192.168.174.129</code></p>
+<p>lldb控制台会输出一些信息并且在虚拟机中也会出现<code>Connected to remote debugger</code>，这样就远程连接到了虚拟机</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161215-5@2x.jpg" alt="QQ20161215-5@2x"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161215-6@2x.jpg" alt="QQ20161215-6@2x"></p>
+<p>到这里，基本上完成了内核调试的基础步骤，然后就进行和平时通过lldb一样的操作了，这里不再赘述，大家可以下来自己按照意愿来调试。</p>
+<blockquote>
+<p><strong>参考：<a href="http://ddeville.me/2015/08/kernel-debugging-with-lldb-and-vmware-fusion" target="_blank" rel="external">http://ddeville.me/2015/08/kernel-debugging-with-lldb-and-vmware-fusion</a></strong></p>
+</blockquote>
+
+    
+
+    
+</div>
+
+
+                
+
+                <!-- Post Comments -->
+                
+                    
+
+
+
+
+                
+            </div>
+
+            <!-- Post Prev & Next Nav -->
+            <nav class="material-nav mdl-color-text--grey-50 mdl-cell mdl-cell--12-col">
+    <!-- Prev Nav -->
+    
+        <a href="/2016/12/20/five-Blog/" id="post_nav-newer" class="prev-content">
+            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
+                <i class="material-icons">arrow_back</i>
+            </button>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            新篇
+        </a>
+    
+
+    <!-- Section Spacer -->
+    <div class="section-spacer"></div>
+
+    <!-- Next Nav -->
+    
+        <a href="/2016/12/06/three-Blog/" id="post_nav-older" class="next-content">
+            旧篇
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
+                <i class="material-icons">arrow_forward</i>
+            </button>
+        </a>
+    
+</nav>
+
+        </div>
+    </div>
+
+
+
+                    
+                        <!-- Overlay For Active Sidebar -->
+<div class="sidebar-overlay"></div>
+
+<!-- Material sidebar -->
+<aside id="sidebar" class="sidebar sidebar-colored sidebar-fixed-left" role="navigation">
+    <div id="sidebar-main">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header header-cover" style="background-image: url(/img/sidebar_header.png);">
+    <!-- Top bar -->
+    <div class="top-bar"></div>
+
+    <!-- Sidebar toggle button -->
+    <button type="button" class="sidebar-toggle mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" style="display: initial;" data-upgraded=",MaterialButton,MaterialRipple">
+        <i class="material-icons">clear_all</i>
+        <span class="mdl-button__ripple-container">
+            <span class="mdl-ripple">
+            </span>
+        </span>
+    </button>
+
+    <!-- Sidebar Avatar -->
+    <div class="sidebar-image">
+        <img src="/img/avatar.png" alt="凌迟's avatar">
+    </div>
+
+    <!-- Sidebar Email -->
+    <a data-toggle="dropdown" class="sidebar-brand" href="#settings-dropdown">
+        hisherlock@icloud.com
+        <b class="caret"></b>
+    </a>
+</div>
+
+
+        <!-- Sidebar Navigation  -->
+        <ul class="nav sidebar-nav">
+    <!-- User dropdown  -->
+    <li class="dropdown">
+        <ul id="settings-dropdown" class="dropdown-menu">
+            
+                <li>
+                    <a href="#" target="_blank" title="Email Me">
+                        
+                            <i class="material-icons sidebar-material-icons sidebar-indent-left1pc-element">email</i>
+                        
+                        Email Me
+                    </a>
+                </li>
+            
+        </ul>
+    </li>
+
+    <!-- Homepage -->
+    
+        <li id="sidebar-first-li">
+            <a href="/" target="_self">
+                
+                    <i class="material-icons sidebar-material-icons">home</i>
+                
+                主页
+            </a>
+        </li>
+        
+    
+
+    <!-- Archives  -->
+    
+        <li class="dropdown">
+            <a href="#" class="ripple-effect dropdown-toggle" data-toggle="dropdown">
+                
+                    <i class="material-icons sidebar-material-icons">inbox</i>
+                
+                    归档
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+            <li>
+                <a class="sidebar_archives-link" href="../../../../archives/2016/12/">十二月 2016<span class="sidebar_archives-count">4</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2016/11/">十一月 2016<span class="sidebar_archives-count">2</span></a>
+            </ul>
+        </li>
+        
+    
+
+    <!-- Categories  -->
+    
+
+    <!-- Pages  -->
+    
+
+    <!-- Article Number  -->
+    
+</ul>
+
+
+        <!-- Sidebar Footer -->
+        <!--
+I'm glad you use this theme, the development is no so easy, I hope you can keep the copyright, I will thank you so much.
+If you still want to delete the copyrights, could you still retain the first one? Which namely "Theme Material"
+It will not impact the appearance and can give developers a lot of support :)
+
+很高兴您使用并喜欢该主题，开发不易 十分谢谢与希望您可以保留一下版权声明。
+如果您仍然想删除的话 能否只保留第一项呢？即 "Theme Material"
+它不会影响美观并可以给开发者很大的支持和动力。 :)
+-->
+
+<!-- Sidebar Divider -->
+
+    <div class="sidebar-divider"></div>
+
+
+<!-- Theme Material -->
+
+
+<!-- Help & Support -->
+<!--
+
+-->
+
+<!-- Feedback -->
+<!--
+
+-->
+
+<!-- About Theme -->
+<!--
+
+-->
+
+    </div>
+
+    <!-- Sidebar Image -->
+    
+
+</aside>
+
+                    
+
+                    
+                        <!-- Footer Top Button -->
+                        <div class="toTop-wrap">
+    <a href="#top" class="toTop">
+        <i class="material-icons footer_top-i">expand_less</i>
+    </a>
+</div>
+
+                    
+
+                    <!--Footer-->
+<footer class="mdl-mini-footer" id="bottom">
+    
+        <!-- Paradox Footer Left Section -->
+        <div class="mdl-mini-footer--left-section sns-list">
+    <!-- Twitter -->
+    
+
+    <!-- Facebook -->
+    
+
+    <!-- Google + -->
+    
+
+    <!-- Weibo -->
+    
+
+    <!-- Instagram -->
+    
+
+    <!-- Tumblr -->
+    
+
+    <!-- Github -->
+    
+        <a href="https://github.com/Hello-Sherlock" target="_blank">
+            <button class="mdl-mini-footer--social-btn social-btn" style="background-image: url(/img/footer/footer_ico-github.png);">
+                <span class="visuallyhidden">Github</span>
+            </button><!--
+     --></a>
+    
+
+    <!-- LinkedIn -->
+    
+
+    <!-- Zhihu -->
+    
+
+    <!-- Bilibili -->
+    
+
+    <!-- Telegram -->
+    
+</div>
+
+
+        <!--Copyright-->
+        <div id="copyright">
+            Copyright&nbsp;©&nbsp;
+            <script type="text/javascript">
+                var fd = new Date();
+                document.write(fd.getFullYear());
+            </script>
+            &nbsp;Hello-Sherlock
+        </div>
+
+        <!-- Paradox Footer Right Section -->
+
+        <!--
+        I am glad you use this theme, the development is no so easy, I hope you can keep the copyright.
+        It will not impact the appearance and can give developers a lot of support :)
+
+        很高兴您使用该主题，开发不易，希望您可以保留一下版权声明。
+        它不会影响美观并可以给开发者很大的支持。 :)
+        -->
+
+        <div class="mdl-mini-footer--right-section">
+            <div>
+                <div class="footer-develop-div">Powered by <a href="https://hexo.io" target="_blank" class="footer-develop-a">Hexo</a></div>
+                <div class="footer-develop-div">Theme - <a href="https://github.com/viosey/hexo-theme-material" target="_blank" class="footer-develop-a">Material</a></div>
+            </div>
+        </div>
+    
+</footer>
+
+
+                    <!-- Import File -->
+<script src="../../../../js/lazyload.min.js"></script>
+<script src="../../../../js/js.min.js"></script>
+<script src="../../../../js/nprogress.js"></script>
+
+<script type="text/javascript">
+    NProgress.configure({
+        showSpinner: true
+    });
+    NProgress.start();
+    $('#nprogress .bar').css({
+        'background': '#29d'
+    });
+    $('#nprogress .peg').css({
+        'box-shadow': '0 0 10px #29d, 0 0 15px #29d'
+    });
+    $('#nprogress .spinner-icon').css({
+        'border-top-color': '#29d',
+        'border-left-color': '#29d'
+    });
+    setTimeout(function() {
+        NProgress.done();
+        $('.fade').removeClass('out');
+    }, 800);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Swiftye -->
+
+
+<!-- Local Search-->
+
+
+<!-- Window Load-->
+<script>
+    $(window).load(function() {
+        // Post_Toc parent position fixed
+        $('.post-toc-wrap').parent('.mdl-menu__container').css('position', 'fixed');
+    });
+</script>
+
+<!-- MathJax Load-->
+
+
+                </main>
+            </div>
+        </body>
+    
+</html>

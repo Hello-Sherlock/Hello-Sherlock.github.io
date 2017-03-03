@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+    <!-- 
+        © Material Theme
+        https://github.com/viosey/hexo-theme-material
+        Version: 1.3.0 -->
+
+    <!-- Title -->
+    
+    <title>
+        
+            通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app | 
+        
+        Hello-Sherlock
+    </title>
+
+    <!-- Favicons -->
+    <link rel="icon shortcut" type="image/ico" href="/img/favicon.png">
+    <link rel="icon" sizes="192x192" href="/img/favicon.png">
+    <link rel="apple-touch-icon" href="/img/favicon.png">
+
+    <!-- Meta & Info -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0097A7">
+    <meta name="author" content="凌迟">
+    <meta name="description" content="学习总结 思考感悟">
+    <meta name="keywords" content="null,tools,ptrace">
+
+    <!--iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-title" content="Title">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="480">
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Hello-Sherlock">
+
+    <!-- The Open Graph protocol -->
+    <meta property="og:url" content="http://Hello-Sherlock.github.io">
+    <meta property="og:type" content="blog">
+    <meta property="og:title" content="通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app | Hello-Sherlock">
+    <meta property="og:description" content="学习总结 思考感悟">
+    <meta property="og:article:tag" content="tools"> <meta property="og:article:tag" content="ptrace"> 
+
+    <!--[if lte IE 9]>
+        <link rel="stylesheet" href="/css/ie-blocker.css">
+
+        
+            <script src="/js/ie-blocker.zhCN.js"></script>
+        
+    <![endif]-->
+
+    <!-- Import CSS -->
+    <link rel="stylesheet" href="../../../../css/material.min.css">
+    <link rel="stylesheet" href="../../../../css/style.min.css">
+    <!-- Config CSS -->
+
+
+<!-- Other Styles -->
+<style>
+  body, html {
+    font-family: Roboto, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  }
+
+  a {
+    color: #00838F;
+  }
+
+  .mdl-card__media,
+  #search-label,
+  #search-form-label:after,
+  #scheme-Paradox .hot_tags-count,
+  #scheme-Paradox .sidebar_archives-count,
+  #scheme-Paradox .sidebar-colored .sidebar-header,
+  #scheme-Paradox .sidebar-colored .sidebar-badge{
+    background-color: #0097A7 !important;
+  }
+
+  /* Sidebar User Drop Down Menu Text Color */
+  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:hover,
+  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:focus {
+    color: #0097A7 !important;
+  }
+
+  #post_entry-right-info,
+  .sidebar-colored .sidebar-nav li:hover > a,
+  .sidebar-colored .sidebar-nav li:hover > a i,
+  .sidebar-colored .sidebar-nav li > a:hover,
+  .sidebar-colored .sidebar-nav li > a:hover i,
+  .sidebar-colored .sidebar-nav li > a:focus i,
+  .sidebar-colored .sidebar-nav > .open > a,
+  .sidebar-colored .sidebar-nav > .open > a:hover,
+  .sidebar-colored .sidebar-nav > .open > a:focus,
+  #ds-reset #ds-ctx .ds-ctx-entry .ds-ctx-head a {
+    color: #0097A7 !important;
+  }
+
+  .toTop {
+    background: #757575 !important;
+  }
+
+  .material-layout .material-post>.material-nav,
+  .material-layout .material-index>.material-nav,
+  .material-nav a {
+    color: #757575;
+  }
+
+  #scheme-Paradox .MD-burger-layer {
+    background-color: #757575;
+  }
+
+  #scheme-Paradox #post-toc-trigger-btn {
+    color: #757575;
+  }
+
+  .post-toc a:hover {
+    color: #00838F;
+    text-decoration: underline;
+  }
+</style>
+
+
+<!-- Theme Background Related-->
+
+    <style>
+      body{
+        background-color: #F5F5F5;
+      }
+
+      /* blog_info bottom background */
+      #scheme-Paradox .material-layout .something-else .mdl-card__supporting-text{
+        background-color: #fff;
+      }
+    </style>
+
+
+
+
+<!-- Fade Effect -->
+
+    <style>
+      .fade {
+        transition: all 800ms linear;
+        -webkit-transform: translate3d(0,0,0);
+        -moz-transform: translate3d(0,0,0);
+        -ms-transform: translate3d(0,0,0);
+        -o-transform: translate3d(0,0,0);
+        transform: translate3d(0,0,0);
+        opacity: 1;
+      }
+
+      .fade.out{
+        opacity: 0;
+      }
+    </style>
+
+
+
+    <script src="../../../../js/jquery.min.js"></script>
+    <script src="../../../../js/queue.js"></script>
+
+    <!-- UC Browser Compatible -->
+    <script>
+        var agent = navigator.userAgent.toLowerCase();
+        if(agent.indexOf('ucbrowser')>0) {
+            document.write("<link rel=\"stylesheet\" href=\"../../../../css/uc.css\">");
+            alert('由于 UC 浏览器使用极旧的内核，而本网站使用了一些新的特性。\n为了您能更好的浏览，推荐使用 Chrome 或 Firefox 浏览器。');
+        }
+    </script>
+
+    
+
+    
+
+    <!-- Bing Background -->
+    
+
+    <!-- Custom Head -->
+    
+</head>
+
+
+    
+        <body id="scheme-Paradox" class="lazy">
+            <div class="material-layout  mdl-js-layout has-drawer is-upgraded">
+                
+
+                <!-- Main Container -->
+                <main class="material-layout__content" id="main">
+
+                    <!-- Top Anchor -->
+                    <div id="top"></div>
+
+                    
+                        <!-- Hamburger Button -->
+                        <button class="MD-burger-icon sidebar-toggle">
+                            <span class="MD-burger-layer"></span>
+                        </button>
+                    
+
+                    <!-- Post TOC -->
+
+    
+    <!-- Back Button -->
+    <!--
+    <div class="material-back" id="backhome-div" tabindex="0">
+        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon"
+           href="#" onclick="window.history.back();return false;"
+           target="_self"
+           role="button"
+           data-upgraded=",MaterialButton,MaterialRipple">
+            <i class="material-icons" role="presentation">arrow_back</i>
+            <span class="mdl-button__ripple-container">
+                <span class="mdl-ripple"></span>
+            </span>
+        </a>
+    </div>
+    -->
+
+    <!-- Left aligned menu below button -->
+    <button id="post-toc-trigger-btn"
+        class="mdl-button mdl-js-button mdl-button--icon">
+        <i class="material-icons">format_list_numbered</i>
+    </button>
+
+    <ul class="post-toc-wrap mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" for="post-toc-trigger-btn">
+        
+
+        <!--
+        <li class="mdl-menu__item">
+            Some Action
+        </li>
+        -->
+    </ul>
+
+
+
+
+<!-- Layouts -->
+
+    <!-- Post Module -->
+    <div class="material-post_container">
+
+        <div class="material-post mdl-grid">
+            <div class="mdl-card mdl-shadow--4dp mdl-cell mdl-cell--12-col">
+
+                <!-- Post Header(Thumbnail & Title) -->
+                
+    <!-- Paradox Post Header -->
+    
+        
+            <!-- Random Thumbnail -->
+            <div class="post_thumbnail-random mdl-card__media mdl-color-text--grey-50">
+            <script>
+    var randomNum = Math.floor(Math.random() * 19 + 1);
+
+    $('.post_thumbnail-random').css('background-image', 'url(' + '/img/random/material-' + randomNum + '.png' + ')');
+</script>
+
+        
+    
+            <p class="article-headline-p">
+                通过Debugserver&lldb来调试一个被加了ptrace反调试的app
+            </p>
+        </div>
+
+
+
+
+
+                
+                    <!-- Paradox Post Info -->
+                    <div class="mdl-color-text--grey-700 mdl-card__supporting-text meta">
+
+    <!-- Author Avatar -->
+    <div id="author-avatar">
+        <img src="/img/avatar.png" width="44px" height="44px" alt="Author Avatar"/>
+    </div>
+    <!-- Author Name & Date -->
+    <div>
+        <strong>凌迟</strong>
+        <span>12月 01, 2016</span>
+    </div>
+
+    <div class="section-spacer"></div>
+
+    <!-- Favorite -->
+    <!--
+        <button id="article-functions-like-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon btn-like">
+            <i class="material-icons" role="presentation">favorite</i>
+            <span class="visuallyhidden">favorites</span>
+        </button>
+    -->
+
+    <!-- Qrcode -->
+    
+        <button id="article-functions-qrcode-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+            <i class="material-icons" role="presentation">devices other</i>
+            <span class="visuallyhidden">devices other</span>
+        </button>
+        <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-qrcode-button">
+            <li class="mdl-menu__item">在其它设备中阅读本文章</li>
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAN4AAADeCAAAAAB3DOFrAAACY0lEQVR42u3aUW4rIQwF0Ox/0+0Cnh65toEZVWe+orRhOHyAdfHn508/Hzw8PDw8PDw8vJfxPvHzv///9/tk/PWvenPDw8PDu8n7stUueesprt+S4PO54eHh4d3n5a/JpztfyvLc8PDw8F7GS4rsNWxddm9Yejw8PLyX8ZIpTo6Hl557eHh4eIMytxwNtKLYx7IWPDw8vJhXvQC7+fmB+z08PDy8Ja/c0hRHCevwIg9/R01XeHh4eAd41Yh2V/xaDSaS2eLh4eE9xaseD8kIebybgJvtqnh4eHibeDkgbyaYh7y9pgQ8PDy8p3j51pyHsPmCVkNkPDw8vGd5yQadgHvhbHVZyyk1Hh4e3gFetfztRQYnmlnx8PDwbvLyZvpq6/+8UO61FODh4eHd5+X4XgyRjJAcUXh4eHhP8arRaq/8zQ+haliMh4eHd59X3Y57jVnVUjuPkgs9ZXh4eHhbeZNBe+2n1ZB3dDDg4eHhHeBNyutJcbxrifHw8PBu8iZhRK90rrYFlK/i8PDw8A7zei0CeUtWL27I42M8PDy8+7zqpX4SLpyOdL8sNB4eHt4VXm/Q3l97IUi+oHh4eHineSfK316ZPh8ZDw8P7w6v+iSv3HvYVFu+8PDw8E7zqkFANapIftsLQQqdEXh4eHgHeHkckAcKeXRbDYK/HDN4eHh4F3nJBl1tFOgdQr0YAg8PD++dvEIoEJfIk8uwzQcDHh4e3hXefNLJ8VMYBw8PD+8ir7cd51dcVWTUKLA3a8HDw8OLeRtaneLoIbrEmgTEeHh4eId5f+/Bw8PDw8PDw8N7wfML1pDjX28olq4AAAAASUVORK5CYII=">
+        </ul>
+    
+
+    <!-- Tags (bookmark) -->
+    
+    <button id="article-functions-viewtags-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+        <i class="material-icons" role="presentation">bookmark</i>
+        <span class="visuallyhidden">bookmark</span>
+    </button>
+    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-viewtags-button">
+        <li class="mdl-menu__item">
+        <a class="post_tag-link" href="../../../../tags/ptrace/">ptrace</a></li><li class="mdl-menu__item"><a class="post_tag-link" href="../../../../tags/tools/">tools</a>
+    </ul>
+    
+
+    <!-- Share -->
+    <button id="article-fuctions-share-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+    <i class="material-icons" role="presentation">share</i>
+    <span class="visuallyhidden">share</span>
+</button>
+<ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-fuctions-share-button">
+    
+
+    
+
+    <!-- Share Weibo -->
+    
+        <a class="post_share-link" href="http://service.weibo.com/share/share.php?appkey=&title=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app&url=http://Hello-Sherlock.github.io/&pic=&searchPic=false&style=simple" target="_blank">
+            <li class="mdl-menu__item">
+                分享到微博
+            </li>
+        </a>
+    
+
+    <!-- Share Twitter -->
+    
+        <a class="post_share-link" href="https://twitter.com/intent/tweet?text=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app&url=http://Hello-Sherlock.github.io/&via=凌迟" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Twitter
+            </li>
+        </a>
+    
+
+    <!-- Share Facebook -->
+    
+        <a class="post_share-link" href="https://www.facebook.com/sharer/sharer.php?u=http://Hello-Sherlock.github.io/" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Facebook
+            </li>
+        </a>
+    
+
+    <!-- Share Google+ -->
+    
+        <a class="post_share-link" href="https://plus.google.com/share?url=http://Hello-Sherlock.github.io/" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Google+
+            </li>
+        </a>
+    
+
+    <!-- Share LinkedIn -->
+    
+        <a class="post_share-link" href="https://www.linkedin.com/shareArticle?mini=true&url=http://Hello-Sherlock.github.io/&title=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 LinkedIn
+            </li>
+        </a>
+    
+
+    <!-- Share QQ -->
+    
+        <a class="post_share-link" href="http://connect.qq.com/widget/shareqq/index.html?site=Hello-Sherlock&title=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app&summary=学习总结 思考感悟&pics=http://Hello-Sherlock.github.io/img/favicon.png&url=http://Hello-Sherlock.github.io" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 QQ
+            </li>
+        </a>
+    
+
+    <!-- Share Telegram -->
+    
+        <a class="post_share-link" href="https://telegram.me/share/url?url=http://Hello-Sherlock.github.io/&text=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app" target="_blank">
+            <li class="mdl-menu__item">
+                分享到 Telegram
+            </li>
+        </a>
+    
+</ul>
+
+</div>
+
+                
+
+                <!-- Post Content -->
+                <div id="post-content" class="mdl-color-text--grey-700 mdl-card__supporting-text fade out">
+    
+        <blockquote>
+<p>关于ptrace,ptrace是一个系统函数，它提供了一种可以使父进程监控其他进程的方式，还可以改变<br>子进程中的寄存器和内核印象，因而可以实现断点调试和系统调用的跟踪。<br>使用ptrace，可以在用户层拦截和修改系统调用。</p>
+</blockquote>
+<a id="more"></a>
+<p>那么我们来到官网看看他是怎么讲的<a href="http://iphonedevwiki.net/index.php/Debugserver" target="_blank" rel="external">http://iphonedevwiki.net/index.php/Debugserver</a><br>官网一张图表达得很清楚<br><img src="http://oh5mz2415.bkt.clouddn.com/one" alt="one"></p>
+<p>我们这里首先使用debugserver正常附加，来判断目标app究竟有没有使用ptrace来反调试<br><figure class="highlight subunit"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">linguochengde-iPhone:~ root# debugserver *:1234 -a AMapiPhone</div><div class="line">debugserver-@(#)PROGRAM:debugserver  PROJECT:debugserver<span class="string">-320</span>.2.89</div><div class="line"> for armv7.</div><div class="line">Attaching to process AMapiPhone...</div><div class="line"><span class="keyword">error: </span>failed to attach to process named: ""</div><div class="line">Exiting.</div></pre></td></tr></table></figure></p>
+<p>可以看到这里debugserver附加失败，再根据目前公开的反调试的方法只有通过ptrace系统函数来反调试，于是了解了ptrace后基本上也就很好绕过了</p>
+<p>首先通过lldb来启动app<br><figure class="highlight gradle"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">linguochengde-iPhone:~ root# debugserver -x posix *:<span class="number">1234</span> <span class="regexp">/var/m</span>obile<span class="regexp">/Containers/</span>Bundle<span class="regexp">/Application/</span><span class="number">9</span>F0A5D73-<span class="number">7589</span>-<span class="number">4</span>BE5-A209-A96002B6D641<span class="regexp">/AMapiPhone.app/</span>AMapiPhone</div><div class="line">debugserver-@(#)PROGRAM:debugserver  <span class="keyword">PROJECT</span>:debugserver-<span class="number">320.2</span>.<span class="number">89</span></div><div class="line"> <span class="keyword">for</span> armv7.</div><div class="line">Listening to port <span class="number">1234</span> <span class="keyword">for</span> a connection <span class="keyword">from</span> *...</div></pre></td></tr></table></figure></p>
+<p>这里之前参考<a href="http://bbs.iosre.com/t/7-2-0-ios/770中的backboard参数，发现失败，于是把参数换成posix后debugserver可以正常附加" target="_blank" rel="external">http://bbs.iosre.com/t/7-2-0-ios/770中的backboard参数，发现失败，于是把参数换成posix后debugserver可以正常附加</a></p>
+<p>然后就按照网上很多方法，启动lldb后，先通过在ptrace上下断点，找到ptrace偏移后的地址，再通过image list -o -f找到ASLR偏移，相减算出ptrace的正确位置后在ida或者hopper中打开，进一步分析</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line">┌─(~)─────────────────────────(linguocheng<span class="comment">@Sherlock-HolmesdeMacBook-Pro:s002)─┐</span></div><div class="line">└─(<span class="number">09</span>:<span class="number">27</span>:<span class="number">13</span>)──&gt; lldb                                              ──(三,<span class="number">1130</span>)─┘</div><div class="line">(lldb)  process connect connect://<span class="number">192</span>.<span class="number">168</span>.<span class="number">1</span>.<span class="number">102</span>:<span class="number">1234</span></div><div class="line"><span class="symbol">Process</span> <span class="number">59223</span> stopped</div><div class="line">* thread <span class="number">#1</span>: tid = <span class="number">0x3240a</span>, <span class="number">0x1fe4d000</span> dyld`_dyld_start, stop reason = signal SIGSTOP</div><div class="line">    frame <span class="number">#0</span>: <span class="number">0x1fe4d000</span> dyld`_dyld_start</div><div class="line"><span class="symbol">dyld</span>`_dyld_start:</div><div class="line">-&gt;  <span class="number">0x1fe4d000</span> &lt;+<span class="number">0</span>&gt;:  <span class="keyword">mov </span>   <span class="built_in">r8</span>, <span class="built_in">sp</span></div><div class="line">    <span class="number">0x1fe4d004</span> &lt;+<span class="number">4</span>&gt;:  <span class="keyword">sub </span>   <span class="built_in">sp</span>, <span class="built_in">sp</span>, <span class="number">#16</span></div><div class="line">    <span class="number">0x1fe4d008</span> &lt;+<span class="number">8</span>&gt;:  <span class="keyword">bic </span>   <span class="built_in">sp</span>, <span class="built_in">sp</span>, <span class="number">#7</span></div><div class="line">    <span class="number">0x1fe4d00c</span> &lt;+<span class="number">12</span>&gt;: <span class="keyword">ldr </span>   <span class="built_in">r3</span>, [<span class="built_in">pc</span>, <span class="number">#0x70</span>]           <span class="comment">; &lt;+132&gt;</span></div><div class="line">(lldb) <span class="keyword">b </span>ptrace</div><div class="line"><span class="keyword">Breakpoint </span><span class="number">1</span>: no locations (pending).</div><div class="line"><span class="symbol">WARNING</span>:  Unable to resolve <span class="keyword">breakpoint </span>to any actual locations.</div><div class="line">(lldb) c</div><div class="line"><span class="symbol">Process</span> <span class="number">59223</span> resuming</div><div class="line"><span class="number">1</span> location <span class="keyword">added </span>to <span class="keyword">breakpoint </span><span class="number">1</span></div><div class="line"><span class="number">2016</span>-<span class="number">11</span>-<span class="number">30</span> <span class="number">09</span>:<span class="number">27</span>:<span class="number">57</span>.<span class="number">361</span> AMapiPhone[<span class="number">59223</span>:<span class="number">205834</span>] Foundation called mkdir(<span class="string">"/tmp/(A Document Being Saved By 高德地图)"</span>), <span class="keyword">it </span>didn<span class="string">'t return 0, and errno was set to 1.</span></div><div class="line">2016-11-30 09:27:57.378 AMapiPhone[59223:205834] Foundation called mkdir("/tmp/(A Document Being Saved By 高德地图)"), it didn't return <span class="number">0</span>, <span class="keyword">and </span>errno was set to <span class="number">1</span>.</div><div class="line"><span class="symbol">Process</span> <span class="number">59223</span> stopped</div><div class="line">* thread <span class="number">#1</span>: tid = <span class="number">0x3240a</span>, <span class="number">0x364b0e58</span> libsystem_kernel.dylib`__ptrace, queue = <span class="string">'com.apple.main-thread'</span>, stop reason = <span class="keyword">breakpoint </span><span class="number">1</span>.<span class="number">1</span></div><div class="line">    frame <span class="number">#0</span>: <span class="number">0x364b0e58</span> libsystem_kernel.dylib`__ptrace</div><div class="line"><span class="symbol">libsystem_kernel.dylib</span>`__ptrace:</div><div class="line">-&gt;  <span class="number">0x364b0e58</span> &lt;+<span class="number">0</span>&gt;:  <span class="keyword">ldr </span>   <span class="built_in">r12</span>, [<span class="built_in">pc</span>, <span class="number">#0x4</span>]           <span class="comment">; &lt;+12&gt;</span></div><div class="line">    <span class="number">0x364b0e5c</span> &lt;+<span class="number">4</span>&gt;:  <span class="keyword">ldr </span>   <span class="built_in">r12</span>, [<span class="built_in">pc</span>, <span class="built_in">r12</span>]</div><div class="line">    <span class="number">0x364b0e60</span> &lt;+<span class="number">8</span>&gt;:  <span class="keyword">b </span>     <span class="number">0x364b0e68</span>                <span class="comment">; &lt;+16&gt;</span></div><div class="line">    <span class="number">0x364b0e64</span> &lt;+<span class="number">12</span>&gt;: <span class="keyword">addeq </span> <span class="built_in">r9</span>, <span class="built_in">r6</span>, <span class="number">#204</span>, <span class="number">#2</span></div><div class="line">(lldb) p/x $<span class="built_in">lr</span></div><div class="line">(unsigned int) <span class="number">$0</span> = <span class="number">0x0004515d</span></div><div class="line">(lldb) image list -o -f</div><div class="line">[  <span class="number">0</span>] <span class="number">0x0002f000</span> /private/var/mobile/Containers/<span class="keyword">Bundle/Application/9F0A5D73-7589-4BE5-A209-A96002B6D641/AMapiPhone.app/AMapiPhone(0x0000000000033000)</span></div></pre></td></tr></table></figure>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/two" alt="two"></p>
+<p>可以看到和之前文章中不一样，这个是在start中加入了ptrace系统函数，我们分析当ptrace第一个参为31时，会detach调试器。所以，newptrace中可以直接返回0，也可以判断第一个参数等于31时，更改参数的返回值</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#import <span class="meta-string">&lt;substrate.h&gt;</span></span></div><div class="line"><span class="meta">#import <span class="meta-string">&lt;mach-o/dyld.h&gt;</span></span></div><div class="line"><span class="meta">#import <span class="meta-string">&lt;dlfcn.h&gt;</span></span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">static</span> <span class="title">int</span> <span class="params">(*oldptrace)</span><span class="params">(<span class="keyword">int</span> request, <span class="keyword">pid_t</span> pid, <span class="keyword">caddr_t</span> addr, <span class="keyword">int</span> data)</span></span>;</div><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">newptrace</span><span class="params">(<span class="keyword">int</span> request, <span class="keyword">pid_t</span> pid, <span class="keyword">caddr_t</span> addr, <span class="keyword">int</span> data)</span></span>&#123;</div><div class="line"></div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line"></div><div class="line">&#125;</div><div class="line">%ctor &#123;</div><div class="line"></div><div class="line">        MSHookFunction((<span class="keyword">void</span> *)MSFindSymbol(<span class="literal">NULL</span>,<span class="string">"_ptrace"</span>), (<span class="keyword">void</span> *)newptrace, (<span class="keyword">void</span> **)&amp;oldptrace);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>OK，有了tweak加持就可以动态调试了</p>
+<figure class="highlight pf"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">linguocheng <span class="keyword">in</span> ~ λ ssh root@<span class="number">192.168</span>.<span class="number">1.102</span></div><div class="line">root@<span class="number">192.168</span>.<span class="number">1.102</span>'s password:</div><div class="line">linguochengde-iPhone:~ root<span class="comment"># debugserver *:1234 -a AMapiPhone</span></div><div class="line">debugserver-@(<span class="comment">#)PROGRAM:debugserver  PROJECT:debugserver-320.2.89</span></div><div class="line"> <span class="keyword">for</span> armv7.</div><div class="line">Attaching <span class="keyword">to</span> process AMapiPhone...</div><div class="line">Listening <span class="keyword">to</span> <span class="keyword">port</span> <span class="number">1234</span> <span class="keyword">for</span> a connection <span class="keyword">from</span> *...</div></pre></td></tr></table></figure>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">┌─(~)─────────────────────────(linguocheng<span class="comment">@Sherlock-HolmesdeMacBook-Pro:s002)─┐</span></div><div class="line">└─(<span class="number">11</span>:<span class="number">27</span>:<span class="number">21</span>)──&gt; lldb                                        <span class="number">146</span> ↵ ──(四,<span class="number">120</span></div><div class="line">(lldb) process connect connect://<span class="number">192</span>.<span class="number">168</span>.<span class="number">1</span>.<span class="number">102</span>:<span class="number">1234</span></div><div class="line"><span class="symbol">Process</span> <span class="number">1996</span> stopped</div><div class="line">* thread <span class="number">#1</span>: tid = <span class="number">0x21a2</span>, <span class="number">0x322a549c</span> libsystem_kernel.dylib`mach_msg_trap + <span class="number">20</span>, name = <span class="string">'RouMainThread'</span>, queue = <span class="string">'com.apple.main-thread'</span>, stop reason = signal SIGSTOP</div><div class="line">    frame <span class="number">#0</span>: <span class="number">0x322a549c</span> libsystem_kernel.dylib`mach_msg_trap + <span class="number">20</span></div><div class="line"><span class="symbol">libsystem_kernel.dylib</span>`mach_msg_trap:</div><div class="line">-&gt;  <span class="number">0x322a549c</span> &lt;+<span class="number">20</span>&gt;: <span class="keyword">pop </span>   &#123;<span class="built_in">r4</span>, <span class="built_in">r5</span>, <span class="built_in">r6</span>, <span class="built_in">r8</span>&#125;</div><div class="line">    <span class="number">0x322a54a0</span> &lt;+<span class="number">24</span>&gt;: <span class="keyword">bx </span>    <span class="built_in">lr</span></div><div class="line"></div><div class="line"><span class="symbol">libsystem_kernel.dylib</span>`mach_msg_overwrite_trap:</div><div class="line">    <span class="number">0x322a54a4</span> &lt;+<span class="number">0</span>&gt;:  <span class="keyword">mov </span>   <span class="built_in">r12</span>, <span class="built_in">sp</span></div><div class="line">    <span class="number">0x322a54a8</span> &lt;+<span class="number">4</span>&gt;:  <span class="keyword">push </span>  &#123;<span class="built_in">r4</span>, <span class="built_in">r5</span>, <span class="built_in">r6</span>, <span class="built_in">r8</span>&#125;</div><div class="line">(lldb)</div></pre></td></tr></table></figure>
+<p>参考:<a href="http://bbs.iosre.com/t/7-2-0-ios/770" target="_blank" rel="external">http://bbs.iosre.com/t/7-2-0-ios/770</a><br>    <a href="http://www.linuxjournal.com/article/6100?page=0,1" target="_blank" rel="external">http://www.linuxjournal.com/article/6100?page=0,1</a></p>
+
+    
+
+    
+</div>
+
+
+                
+
+                <!-- Post Comments -->
+                
+                    
+
+
+
+
+                
+            </div>
+
+            <!-- Post Prev & Next Nav -->
+            <nav class="material-nav mdl-color-text--grey-50 mdl-cell mdl-cell--12-col">
+    <!-- Prev Nav -->
+    
+        <a href="/2016/12/06/three-Blog/" id="post_nav-newer" class="prev-content">
+            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
+                <i class="material-icons">arrow_back</i>
+            </button>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            新篇
+        </a>
+    
+
+    <!-- Section Spacer -->
+    <div class="section-spacer"></div>
+
+    <!-- Next Nav -->
+    
+        <a href="/2016/11/24/one-Blog/" id="post_nav-older" class="next-content">
+            旧篇
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
+                <i class="material-icons">arrow_forward</i>
+            </button>
+        </a>
+    
+</nav>
+
+        </div>
+    </div>
+
+
+
+                    
+                        <!-- Overlay For Active Sidebar -->
+<div class="sidebar-overlay"></div>
+
+<!-- Material sidebar -->
+<aside id="sidebar" class="sidebar sidebar-colored sidebar-fixed-left" role="navigation">
+    <div id="sidebar-main">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header header-cover" style="background-image: url(/img/sidebar_header.png);">
+    <!-- Top bar -->
+    <div class="top-bar"></div>
+
+    <!-- Sidebar toggle button -->
+    <button type="button" class="sidebar-toggle mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" style="display: initial;" data-upgraded=",MaterialButton,MaterialRipple">
+        <i class="material-icons">clear_all</i>
+        <span class="mdl-button__ripple-container">
+            <span class="mdl-ripple">
+            </span>
+        </span>
+    </button>
+
+    <!-- Sidebar Avatar -->
+    <div class="sidebar-image">
+        <img src="/img/avatar.png" alt="凌迟's avatar">
+    </div>
+
+    <!-- Sidebar Email -->
+    <a data-toggle="dropdown" class="sidebar-brand" href="#settings-dropdown">
+        hisherlock@icloud.com
+        <b class="caret"></b>
+    </a>
+</div>
+
+
+        <!-- Sidebar Navigation  -->
+        <ul class="nav sidebar-nav">
+    <!-- User dropdown  -->
+    <li class="dropdown">
+        <ul id="settings-dropdown" class="dropdown-menu">
+            
+                <li>
+                    <a href="#" target="_blank" title="Email Me">
+                        
+                            <i class="material-icons sidebar-material-icons sidebar-indent-left1pc-element">email</i>
+                        
+                        Email Me
+                    </a>
+                </li>
+            
+        </ul>
+    </li>
+
+    <!-- Homepage -->
+    
+        <li id="sidebar-first-li">
+            <a href="/" target="_self">
+                
+                    <i class="material-icons sidebar-material-icons">home</i>
+                
+                主页
+            </a>
+        </li>
+        
+    
+
+    <!-- Archives  -->
+    
+        <li class="dropdown">
+            <a href="#" class="ripple-effect dropdown-toggle" data-toggle="dropdown">
+                
+                    <i class="material-icons sidebar-material-icons">inbox</i>
+                
+                    归档
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+            <li>
+                <a class="sidebar_archives-link" href="../../../../archives/2016/12/">十二月 2016<span class="sidebar_archives-count">4</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2016/11/">十一月 2016<span class="sidebar_archives-count">2</span></a>
+            </ul>
+        </li>
+        
+    
+
+    <!-- Categories  -->
+    
+
+    <!-- Pages  -->
+    
+
+    <!-- Article Number  -->
+    
+</ul>
+
+
+        <!-- Sidebar Footer -->
+        <!--
+I'm glad you use this theme, the development is no so easy, I hope you can keep the copyright, I will thank you so much.
+If you still want to delete the copyrights, could you still retain the first one? Which namely "Theme Material"
+It will not impact the appearance and can give developers a lot of support :)
+
+很高兴您使用并喜欢该主题，开发不易 十分谢谢与希望您可以保留一下版权声明。
+如果您仍然想删除的话 能否只保留第一项呢？即 "Theme Material"
+它不会影响美观并可以给开发者很大的支持和动力。 :)
+-->
+
+<!-- Sidebar Divider -->
+
+    <div class="sidebar-divider"></div>
+
+
+<!-- Theme Material -->
+
+
+<!-- Help & Support -->
+<!--
+
+-->
+
+<!-- Feedback -->
+<!--
+
+-->
+
+<!-- About Theme -->
+<!--
+
+-->
+
+    </div>
+
+    <!-- Sidebar Image -->
+    
+
+</aside>
+
+                    
+
+                    
+                        <!-- Footer Top Button -->
+                        <div class="toTop-wrap">
+    <a href="#top" class="toTop">
+        <i class="material-icons footer_top-i">expand_less</i>
+    </a>
+</div>
+
+                    
+
+                    <!--Footer-->
+<footer class="mdl-mini-footer" id="bottom">
+    
+        <!-- Paradox Footer Left Section -->
+        <div class="mdl-mini-footer--left-section sns-list">
+    <!-- Twitter -->
+    
+
+    <!-- Facebook -->
+    
+
+    <!-- Google + -->
+    
+
+    <!-- Weibo -->
+    
+
+    <!-- Instagram -->
+    
+
+    <!-- Tumblr -->
+    
+
+    <!-- Github -->
+    
+        <a href="https://github.com/Hello-Sherlock" target="_blank">
+            <button class="mdl-mini-footer--social-btn social-btn" style="background-image: url(/img/footer/footer_ico-github.png);">
+                <span class="visuallyhidden">Github</span>
+            </button><!--
+     --></a>
+    
+
+    <!-- LinkedIn -->
+    
+
+    <!-- Zhihu -->
+    
+
+    <!-- Bilibili -->
+    
+
+    <!-- Telegram -->
+    
+</div>
+
+
+        <!--Copyright-->
+        <div id="copyright">
+            Copyright&nbsp;©&nbsp;
+            <script type="text/javascript">
+                var fd = new Date();
+                document.write(fd.getFullYear());
+            </script>
+            &nbsp;Hello-Sherlock
+        </div>
+
+        <!-- Paradox Footer Right Section -->
+
+        <!--
+        I am glad you use this theme, the development is no so easy, I hope you can keep the copyright.
+        It will not impact the appearance and can give developers a lot of support :)
+
+        很高兴您使用该主题，开发不易，希望您可以保留一下版权声明。
+        它不会影响美观并可以给开发者很大的支持。 :)
+        -->
+
+        <div class="mdl-mini-footer--right-section">
+            <div>
+                <div class="footer-develop-div">Powered by <a href="https://hexo.io" target="_blank" class="footer-develop-a">Hexo</a></div>
+                <div class="footer-develop-div">Theme - <a href="https://github.com/viosey/hexo-theme-material" target="_blank" class="footer-develop-a">Material</a></div>
+            </div>
+        </div>
+    
+</footer>
+
+
+                    <!-- Import File -->
+<script src="../../../../js/lazyload.min.js"></script>
+<script src="../../../../js/js.min.js"></script>
+<script src="../../../../js/nprogress.js"></script>
+
+<script type="text/javascript">
+    NProgress.configure({
+        showSpinner: true
+    });
+    NProgress.start();
+    $('#nprogress .bar').css({
+        'background': '#29d'
+    });
+    $('#nprogress .peg').css({
+        'box-shadow': '0 0 10px #29d, 0 0 15px #29d'
+    });
+    $('#nprogress .spinner-icon').css({
+        'border-top-color': '#29d',
+        'border-left-color': '#29d'
+    });
+    setTimeout(function() {
+        NProgress.done();
+        $('.fade').removeClass('out');
+    }, 800);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Swiftye -->
+
+
+<!-- Local Search-->
+
+
+<!-- Window Load-->
+<script>
+    $(window).load(function() {
+        // Post_Toc parent position fixed
+        $('.post-toc-wrap').parent('.mdl-menu__container').css('position', 'fixed');
+    });
+</script>
+
+<!-- MathJax Load-->
+
+
+                </main>
+            </div>
+        </body>
+    
+</html>
