@@ -10,7 +10,7 @@
     
     <title>
         
-            Mach-O文件格式 | 
+            浅谈Mach IPC | 
         
         Hello-Sherlock
     </title>
@@ -27,7 +27,7 @@
     <meta name="theme-color" content="#0097A7">
     <meta name="author" content="凌迟">
     <meta name="description" content="null">
-    <meta name="keywords" content="null,OSX,Mach-O">
+    <meta name="keywords" content="null,OSX,Mach,IPC">
 
     <!--iOS -->
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
@@ -48,9 +48,9 @@
     <!-- The Open Graph protocol -->
     <meta property="og:url" content="http://Hello-Sherlock.github.io">
     <meta property="og:type" content="blog">
-    <meta property="og:title" content="Mach-O文件格式 | Hello-Sherlock">
+    <meta property="og:title" content="浅谈Mach IPC | Hello-Sherlock">
     <meta property="og:description" content="null">
-    <meta property="og:article:tag" content="OSX"> <meta property="og:article:tag" content="Mach-O"> 
+    <meta property="og:article:tag" content="OSX"> <meta property="og:article:tag" content="Mach"> <meta property="og:article:tag" content="IPC"> 
 
     <!--[if lte IE 9]>
         <link rel="stylesheet" href="/css/ie-blocker.css">
@@ -234,7 +234,7 @@
     </button>
 
     <ul class="post-toc-wrap mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" for="post-toc-trigger-btn">
-        <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Headers"><span class="post-toc-number">1.</span> <span class="post-toc-text">Headers</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Load-Commands"><span class="post-toc-number">2.</span> <span class="post-toc-text">Load Commands</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Section"><span class="post-toc-number">3.</span> <span class="post-toc-text">Section</span></a></li></ol>
+        <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#消息"><span class="post-toc-number">1.</span> <span class="post-toc-text">消息</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#port"><span class="post-toc-number">2.</span> <span class="post-toc-text">port</span></a></li></ol>
 
         <!--
         <li class="mdl-menu__item">
@@ -270,7 +270,7 @@
         
     
             <p class="article-headline-p">
-                Mach-O文件格式
+                浅谈Mach IPC
             </p>
         </div>
 
@@ -289,7 +289,7 @@
     <!-- Author Name & Date -->
     <div>
         <strong>凌迟</strong>
-        <span>12月 06, 2016</span>
+        <span>2月 12, 2017</span>
     </div>
 
     <div class="section-spacer"></div>
@@ -310,7 +310,7 @@
         </button>
         <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-qrcode-button">
             <li class="mdl-menu__item">在其它设备中阅读本文章</li>
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPYAAAD2CAAAAADAeSUUAAAC3klEQVR42u3aUW4qMRAEQO5/6eT3SU8s3WNWAbv8hRBhXY6UyUz78XPkemBjY2NjY2NjY2N/JPsRr38/337Ds88/3eJ/T3z2TvFcbGxs7K3ZL/70P9l6vq1rcH5YS3vGxsbGPoDdFq3kCK43ev2s/AiiPWNjY2Njl6UrAV8fRL4fbGxsbOyWPRskte+0RQ4bGxsbOx/WzwpSGw+0z7pxloaNjY398exZ0Pu3r/8s38bGxsb+MHa78sfMooW2mBU7x8bGxt6UnWw34eXxQDt4ykvXGzowbGxs7K9lv+v6Y1LM2oubeYF88UlsbGzsw9jrIev6eOhdcQI2Njb23uxZ43Fd5FbWfREyNjY29jnspLDlLUrS3iRNTl4yi6AXGxsbewt2y8thLaA9sjYGxsbGxj6B3TYVbSg7K5mzSBgbGxv7HHYe4rbNQ35w+bflYQM2Njb2mew2uG2bkNlY6vZZGjY2NvaXs2fUdjA0HAONYuCogGFjY2Nvys7bj+tP5i3ESrm6JR7AxsbG3oLdlpb8/ZXyMxt4YWNjY5/Avi4J+ZrFA7OLO8NLQtjY2NibspPHJAUvaUKut5i3MW8bKmFjY2NvxM6D3pWrM220kICTb8DGxsY+gb0S/a6EDW0Za39V2NjY2Geyk821o6i8hVhnDzswbGxs7C9n5w1G/npWtNqieMuVHWxsbOyvYicrHzbNAPkYa3YxCBsbG/s09vrmHssrP9YklsDGxsbem33fFtuLPsnP5iUzigewsbGxt2DP2pK8Ucm/rW1s8pEWNjY29t7sWaHKm5NZfNsGEtEBYWNjY2/NnhWtdvSTX9+ZBb0vDhobGxv7AHZbtPLrMisXenIeNjY2NvZsoPNiKD8aQq00SEUqgo2NjX0we3Z9Z3YcbVtSxAPY2NjY27HfNVTKt5u3FrNLPNjY2NjnsNt/+pNx0mNhDS/ltEMlbGxs7C3Y5yxsbGxsbGxsbGzsj1m/FsVH6vHDvfYAAAAASUVORK5CYII=">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPYAAAD2CAAAAADAeSUUAAAC5UlEQVR42u3aS47jMAwFwNz/0jPbBgZxHkll2pbKq8D5WKUGmiCfXn+OvF7Y2NjY2NjY2NjYt2S/4uvn5/99/e7Ou2/lT3n3a/masbGxsU9gf/jX/2bRCfX6u9eM6zXka8bGxsY+hz0pWgny+k5yv7dmbGxsbOykROXNQ1KWqp/ExsbGxq4WsLzB6G0WNjY2NnaPnQ9o8pFTFMHGJfDXZmnY2NjYt2fPg97///oW+TY2Njb2Ddi9Kx/r97avVwg/rBkbGxt7U3Z+gCYfA/Val1UBQ/PwJTY2NvbD2dURf2GUE8e3+Yiq+YfBxsbGPoydH9npjajyOLm6lc14ABsbG/vh7Grsmi+0eid/7oJUBBsbG3sLdrXBqC4rb2ySxqN3xAcbGxv7THYSBvTevS5C+cCrXG6xsbGxt2YnrUJ1oNNjJKUraYSiAoaNjY29BTsZ1veGO9UoNw8bkpUsCHqxsbGxH8KulqK1AcCqjYs2ERsbG/sY9mQL8mH9qpajMMbCxsbG3ppdLSfVUDbf4pyUPwUbGxv7NHZ+53tHcKpbj42NjX0yOy853454qysphxnY2NjYm7Ing57quD8fCUVDouK3sLGxsc9hTzB5ubreymoYMOrAsLGxsR/Oro5mkkVPGpL8qjYk2NjY2Luy85AgGQZdf2YyHkoK52iohI2Njf1Y9oIANT5eMzl8Uw0ksLGxsU9jV0tU75BN3tI0m43rzcXGxsbemj3ZgpyR35kECYV4ABsbG3trdvJzefTb29a8iEZPx8bGxt6U3YtXJ7FBr2mpBg/lVAQbGxv7sey1Byt7paXawFSLLjY2NvYJ7PlAZ37EZ21hK+Tb2NjY2Buxk0fm4HwgldzpDbCwsbGxsSfspCjmjU0SHmBjY2NjV9uAajOTh7tV8FdOKmFjY2M/kJ3DqkVlckwn38rmSSVsbGzsLdi9oDdpTpJi0zuas6AVwcbGxt6Cfc6FjY2NjY2NjY2NfZvrLxBZKlz5ZlwRAAAAAElFTkSuQmCC">
         </ul>
     
 
@@ -322,7 +322,7 @@
     </button>
     <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-viewtags-button">
         <li class="mdl-menu__item">
-        <a class="post_tag-link" href="../../../../tags/Mach-O/">Mach-O</a></li><li class="mdl-menu__item"><a class="post_tag-link" href="../../../../tags/OSX/">OSX</a>
+        <a class="post_tag-link" href="../../../../tags/IPC/">IPC</a></li><li class="mdl-menu__item"><a class="post_tag-link" href="../../../../tags/Mach/">Mach</a></li><li class="mdl-menu__item"><a class="post_tag-link" href="../../../../tags/OSX/">OSX</a>
     </ul>
     
 
@@ -338,7 +338,7 @@
 
     <!-- Share Weibo -->
     
-        <a class="post_share-link" href="http://service.weibo.com/share/share.php?appkey=&title=Mach-O文件格式&url=http://Hello-Sherlock.github.io/&pic=&searchPic=false&style=simple" target="_blank">
+        <a class="post_share-link" href="http://service.weibo.com/share/share.php?appkey=&title=浅谈Mach IPC&url=http://Hello-Sherlock.github.io/&pic=&searchPic=false&style=simple" target="_blank">
             <li class="mdl-menu__item">
                 分享到微博
             </li>
@@ -347,7 +347,7 @@
 
     <!-- Share Twitter -->
     
-        <a class="post_share-link" href="https://twitter.com/intent/tweet?text=Mach-O文件格式&url=http://Hello-Sherlock.github.io/&via=凌迟" target="_blank">
+        <a class="post_share-link" href="https://twitter.com/intent/tweet?text=浅谈Mach IPC&url=http://Hello-Sherlock.github.io/&via=凌迟" target="_blank">
             <li class="mdl-menu__item">
                 分享到 Twitter
             </li>
@@ -374,7 +374,7 @@
 
     <!-- Share LinkedIn -->
     
-        <a class="post_share-link" href="https://www.linkedin.com/shareArticle?mini=true&url=http://Hello-Sherlock.github.io/&title=Mach-O文件格式" target="_blank">
+        <a class="post_share-link" href="https://www.linkedin.com/shareArticle?mini=true&url=http://Hello-Sherlock.github.io/&title=浅谈Mach IPC" target="_blank">
             <li class="mdl-menu__item">
                 分享到 LinkedIn
             </li>
@@ -383,7 +383,7 @@
 
     <!-- Share QQ -->
     
-        <a class="post_share-link" href="http://connect.qq.com/widget/shareqq/index.html?site=Hello-Sherlock&title=Mach-O文件格式&summary=null&pics=http://Hello-Sherlock.github.io/img/favicon.png&url=http://Hello-Sherlock.github.io" target="_blank">
+        <a class="post_share-link" href="http://connect.qq.com/widget/shareqq/index.html?site=Hello-Sherlock&title=浅谈Mach IPC&summary=null&pics=http://Hello-Sherlock.github.io/img/favicon.png&url=http://Hello-Sherlock.github.io" target="_blank">
             <li class="mdl-menu__item">
                 分享到 QQ
             </li>
@@ -392,7 +392,7 @@
 
     <!-- Share Telegram -->
     
-        <a class="post_share-link" href="https://telegram.me/share/url?url=http://Hello-Sherlock.github.io/&text=Mach-O文件格式" target="_blank">
+        <a class="post_share-link" href="https://telegram.me/share/url?url=http://Hello-Sherlock.github.io/&text=浅谈Mach IPC" target="_blank">
             <li class="mdl-menu__item">
                 分享到 Telegram
             </li>
@@ -407,38 +407,31 @@
                 <!-- Post Content -->
                 <div id="post-content" class="mdl-color-text--grey-700 mdl-card__supporting-text fade out">
     
-        <p>众所周知，我们用Xcode构建一个程序过程中，会把源文件转换成一个可执行文件，这个可执行文件中包含的字节码会被CPU执行。<br>就像Windows上的PE和Linux上的ELF，OS X系统可执行文件的格式为Mach-O，接下来简单谈谈Mach-O。</p>
-<p>先来看看苹果官方文档对Mach-O结构组成的描述<br><a id="more"></a></p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/794D3F35-0A43-45E0-9EA4-CA2637954096.png" alt="794D3F35-0A43-45E0-9EA4-CA2637954096"></p>
-<p>由图可知，Mach-O主要分为3大部分：<br>1.Header:用于快速确认一些关于当前文件对应的处理器，文件类型，Load connamd个数基本信息<br>2.Load commands:紧跟在Header之后，用于告诉加载器怎样处理二进制数据<br>3.Data:包含Segment中的具体信息</p>
-<h3 id="Headers"><a href="#Headers" class="headerlink" title="Headers"></a>Headers</h3><p>headers的定义在开源内核代码中可以找到(/usr/include/mach-o/loader.h)</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> mach_header &#123;</div><div class="line"><span class="keyword">uint32_t</span> magic; <span class="comment">/* mach magic number identifier */</span></div><div class="line"><span class="keyword">cpu_type_t</span> cputype; <span class="comment">/* cpu specifier */</span></div><div class="line"><span class="keyword">cpu_subtype_t</span> cpusubtype; <span class="comment">/* machine specifier */</span></div><div class="line"><span class="keyword">uint32_t</span> filetype; <span class="comment">/* type of file */</span></div><div class="line"><span class="keyword">uint32_t</span> ncmds; <span class="comment">/* number of load commands */</span></div><div class="line"><span class="keyword">uint32_t</span> sizeofcmds; <span class="comment">/* the size of all the load commands */</span></div><div class="line"><span class="keyword">uint32_t</span> flags; <span class="comment">/* flags */</span></div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">/* Constant for the magic field of the mach_header (32-bit architectures) */</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MH_MAGIC 0xfeedface <span class="comment">/* the mach magic number */</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MH_CIGAM 0xcefaedfe <span class="comment">/* NXSwapInt(MH_MAGIC) */</span></span></div><div class="line"></div><div class="line"><span class="comment">/*</span></div><div class="line"> * The 64-bit mach header appears at the very beginning of object files for</div><div class="line"> * 64-bit architectures.</div><div class="line"> */</div><div class="line"><span class="keyword">struct</span> mach_header_64 &#123;</div><div class="line"><span class="keyword">uint32_t</span> magic; <span class="comment">/* mach magic number identifier */</span></div><div class="line"><span class="keyword">cpu_type_t</span> cputype; <span class="comment">/* cpu specifier */</span></div><div class="line"><span class="keyword">cpu_subtype_t</span> cpusubtype; <span class="comment">/* machine specifier */</span></div><div class="line"><span class="keyword">uint32_t</span> filetype; <span class="comment">/* type of file */</span></div><div class="line"><span class="keyword">uint32_t</span> ncmds; <span class="comment">/* number of load commands */</span></div><div class="line"><span class="keyword">uint32_t</span> sizeofcmds; <span class="comment">/* the size of all the load commands */</span></div><div class="line"><span class="keyword">uint32_t</span> flags; <span class="comment">/* flags */</span></div><div class="line"><span class="keyword">uint32_t</span> reserved; <span class="comment">/* reserved */</span></div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">/* Constant for the magic field of the mach_header_64 (64-bit architectures) */</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MH_MAGIC_64 0xfeedfacf <span class="comment">/* the 64-bit mach magic number */</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MH_CIGAM_64 0xcffaedfe <span class="comment">/* NXSwapInt(MH_MAGIC_64) */</span></span></div><div class="line"></div><div class="line"><span class="comment">/*</span></div></pre></td></tr></table></figure>
-<p>根据mach_header和mach_header_64的定义，可以很明显的看出Headers的主要作用就是迅速确认当前文件的文件类型运行环境等。</p>
-<p>这里找个例子，首先创建一个helloworld.c文件，</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></div><div class="line">&#123;</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Hello World!\n"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>保存后在终端后再当前目录下输入代码<br>clang helloworld.c<br>如果我们没有指定名字的话，编译器会默认把helloworld.c文件编译成名为a.out的二进制文件</p>
-<p>我们用MachOView打开这个二进制文件，来看看headers中的详细信息(这里可以通过<code>otool -l a.out</code>来查看，但看起来比较吃力)</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/4C4E0C28-68AB-4D4E-9B38-8A520350E25F.png" alt="4C4E0C28-68AB-4D4E-9B38-8A520350E25F"></p>
-<ul>
-<li>Magic：魔数，用于快速确认该文件用于64位还是32位，32位是0xfeedface,64位是0xfeedfacf</li>
-<li>Cpu Type：CPU类型，</li>
-<li>Cpusub Type：对应的具体类型，比如arm64、armv7</li>
-<li>File Type：文件类型，比如可执行文件、库文件、Dsym文件，图中代表可执行文件,如例子中的MH_EXECUTE为可执行文件</li>
-<li>MH_PIE:加载程序在随机的地址空间，只在MH_EXECUTE中使用</li>
-<li>MH_TWOLEVEL:两级空间名称</li>
-<li>MH_DYLDLINK:连接器linker</li>
-<li>dyld：动态链接器，他是苹果开源的一个项目，可以在这里下载，当内核执行LC_DYLINK时，连接器会启动，查找进程所依赖的动态库，并加载到内存中。dyld是一个用户态进程，他不属于内核部分，而是作为一个单独的开源项目被苹果维护（但是属于Darwin部分）</li>
-<li>随机地址空间ASLR：进程每一次启动，地址空间都会简单的随机化，否则，如果程序每一次启动的虚拟内存镜像都是一致的，容易被黑客采取重写内存的方式来破解。</li>
-</ul>
-<h3 id="Load-Commands"><a href="#Load-Commands" class="headerlink" title="Load Commands"></a>Load Commands</h3><figure class="highlight capnproto"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">load_command</span> </span>&#123;</div><div class="line">uint32_t cmd; /* type <span class="keyword">of</span> load command */</div><div class="line">uint32_t cmdsize; /* total size <span class="keyword">of</span> command <span class="keyword">in</span> bytes */</div></pre></td></tr></table></figure>
-<p>Load Commands直接跟在headers后面，加载headers之后通过解析LoadCommands来加载接下来的数据，LC_SEGMENT_64和LC_SEGMENT是加载的主要命令，他们负责指导内核设置进程的内存空间</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/F784BC98-6C5A-4723-8CE9-77A3042481E7.png" alt="F784BC98-6C5A-4723-8CE9-77A3042481E7"></p>
-<p>关于具体如何通过load_commands的cmd字段来加载mach-o 文件，有兴趣可以去/usr/include/mach-o 下面看看源码，这里只要知道根据cmd字段的类型不同，使用了不同的函数来加载，基本看语义都可以解决。</p>
-<p>这里大概讲一下前面这些段分别代表的含义，_TEXT对应的就是代码段，_DATA对应的是可读或可写的数据，_LINKEDIT是支持dyld的，里面包含符号表等数据。</p>
-<h3 id="Section"><a href="#Section" class="headerlink" title="Section"></a>Section</h3><p>一个可执行文件包含多个段，也就是多个 section。可执行文件不同的部分将加载进不同的section，并且不同的section会转换进不同的segment中。这个概念对于所有的可执行文件都是成立的。</p>
-<blockquote>
-<p>参考文章：<a href="https://objccn.io/issue-6-3/" target="_blank" rel="external">https://objccn.io/issue-6-3/</a> </p>
+        <blockquote>
+<p>原语是由若干个 机器指令 构成的完成某种特定功能的一段程序，具有不可分割性，即原语的执行必须是连续的，在执行过程中不允许被中断</p>
 </blockquote>
+<p>在谈mach ipc之前我们先来讨论讨论mach的一些设计风格以及ipc的一些基础概念</p>
+<p>首先mach作为一个极简的内核，其主要功能就是要把所有的功能都移除内核，放在用户态中，这样mach就可以保持着极简的风格。mach设计最大的优点是没有在设计中像其他内核一样考虑多处理，内核中的大部分功能都是分离的组件通过消息的传递来执行，这样不同的组件就可以不用再同一个处理器上执行。</p>
+<h2 id="消息"><a href="#消息" class="headerlink" title="消息"></a>消息</h2><blockquote>
+<p>在mach中，所有的东西都是通过自己的对象来实现的，进程称为任务，线程和虚拟内存都可以称为对象，所有对象都有自己的属性</p>
+</blockquote>
+<p>说到消息，其实mach中最基本的概念就是消息，它是mach ipc的核心构建模块，是在两个端口之间传递的</p>
+<p>像在其他架构中，对象和对象之前的通信都是要有一个接口，而mach是通过消息传递的方式来实现对象间的通信，这就是mach特殊的地方。</p>
+<p>mach消息有简单与复杂之分，其实说白了就是不同字段的消息结构，复杂消息主要是通过消息头标志位的<code>MACH_MSGH_BITS_COMPLES</code>来确定的<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">void</span>*				address;</div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> !defined(__LP64__)</span></div><div class="line">  <span class="keyword">mach_msg_size_t</span>       	size;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">  <span class="keyword">boolean_t</span>     		deallocate: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_copy_options_t</span>       copy: <span class="number">8</span>;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span>     		pad1: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_descriptor_type_t</span>    type: <span class="number">8</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(__LP64__)</span></div><div class="line">  <span class="keyword">mach_msg_size_t</span>       	size;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(KERNEL) &amp;&amp; !defined(__LP64__)</span></div><div class="line">  <span class="keyword">uint32_t</span>          pad_end;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">&#125; <span class="keyword">mach_msg_ool_descriptor_t</span>;</div><div class="line"></div><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">uint32_t</span>			address;</div><div class="line">  <span class="keyword">mach_msg_size_t</span>		count;</div><div class="line">  <span class="keyword">boolean_t</span>     		deallocate: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_copy_options_t</span>       copy: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_type_name_t</span>		disposition : <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_descriptor_type_t</span>	type : <span class="number">8</span>;</div><div class="line">&#125; <span class="keyword">mach_msg_ool_ports_descriptor32_t</span>;</div><div class="line"></div><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">uint64_t</span>			address;</div><div class="line">  <span class="keyword">boolean_t</span>     		deallocate: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_copy_options_t</span>       copy: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_type_name_t</span>		disposition : <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_descriptor_type_t</span>	type : <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_size_t</span>		count;</div><div class="line">&#125; <span class="keyword">mach_msg_ool_ports_descriptor64_t</span>;</div><div class="line"></div><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">void</span>*				address;</div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> !defined(__LP64__)</span></div><div class="line">  <span class="keyword">mach_msg_size_t</span>		count;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">  <span class="keyword">boolean_t</span>     		deallocate: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_copy_options_t</span>       copy: <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_type_name_t</span>		disposition : <span class="number">8</span>;</div><div class="line">  <span class="keyword">mach_msg_descriptor_type_t</span>	type : <span class="number">8</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(__LP64__)</span></div><div class="line">  <span class="keyword">mach_msg_size_t</span>		count;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(KERNEL) &amp;&amp; !defined(__LP64__)</span></div><div class="line">  <span class="keyword">uint32_t</span>          pad_end;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line">&#125; <span class="keyword">mach_msg_ool_ports_descriptor_t</span>;</div><div class="line"></div><div class="line"><span class="comment">/*</span></div><div class="line"> * LP64support - This union definition is not really</div><div class="line"> * appropriate in LP64 mode because not all descriptors</div><div class="line"> * are of the same size in that environment.</div><div class="line"> */</div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(__LP64__) &amp;&amp; defined(KERNEL)</span></div><div class="line"><span class="keyword">typedef</span> <span class="keyword">union</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">mach_msg_port_descriptor_t</span>		port;</div><div class="line">  <span class="keyword">mach_msg_ool_descriptor32_t</span>		out_of_line;</div><div class="line">  <span class="keyword">mach_msg_ool_ports_descriptor32_t</span>	ool_ports;</div><div class="line">  <span class="keyword">mach_msg_type_descriptor_t</span>		type;</div><div class="line">&#125; <span class="keyword">mach_msg_descriptor_t</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">else</span></span></div><div class="line"><span class="keyword">typedef</span> <span class="keyword">union</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">mach_msg_port_descriptor_t</span>		port;</div><div class="line">  <span class="keyword">mach_msg_ool_descriptor_t</span>		out_of_line;</div><div class="line">  <span class="keyword">mach_msg_ool_ports_descriptor_t</span>	ool_ports;</div><div class="line">  <span class="keyword">mach_msg_type_descriptor_t</span>		type;</div><div class="line">&#125; <span class="keyword">mach_msg_descriptor_t</span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div></pre></td></tr></table></figure></p>
+<p>由以上代码可以看出，在复杂消息的描述符中出现了一些OOL(out-of-line)，他是mach消息的重要特性，允许添加各种数据的分散指针，这就相当于添加了好多通向对象的各种条件的管道，主要描述了要附加数据的地址和大小以及对数据的一些处理。</p>
+<p>mach消息的发送和接收主要是通过一个共同的API函数<code>mach_msg()</code>来实现，其中包含了<code>mach_msg_send()</code>和<code>mach_msg_receive()</code>等，而<code>mach_msg()</code>则调用了一个mach陷阱(<code>mach_msg_trap</code>相当于系统调用)，当mach在用户态时可以通过引发mach陷阱来切换到内核态继续完成mach_msg的相应工作。</p>
+<p>由于mach架构是一个标准的微内核架构，所以<code>mach_msg()</code>函数必须在发送者和接收者之间复制消息所在的内存，这样频繁的复制内存会带来很大的损耗，为了解决这个问题，XNU中会让让所有的内核组件共享同一个地址空间，这样消息在传递的过程中只需要传递其相应的指针就可以了。</p>
+<h2 id="port"><a href="#port" class="headerlink" title="port"></a>port</h2><p>说起ipc，除了消息，那就是端口了</p>
+<p>ipc设计中非常强大的一个特性就是可以通过复杂消息将端口从一个任务传递到另一个任务中，也可以将端口和权限从一个实体传到另一个实体，每一个端口都有自己的权限</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">natural_t</span> <span class="keyword">mach_port_right_t</span>;</div><div class="line"><span class="comment">//发送</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MACH_PORT_RIGHT_SEND		((mach_port_right_t) 0)</span></div><div class="line"><span class="comment">//接收</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MACH_PORT_RIGHT_RECEIVE		((mach_port_right_t) 1)</span></div><div class="line"><span class="comment">//发送一次</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MACH_PORT_RIGHT_SEND_ONCE	((mach_port_right_t) 2)</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MACH_PORT_RIGHT_PORT_SET	((mach_port_right_t) 3)</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MACH_PORT_RIGHT_DEAD_NAME	((mach_port_right_t) 4)</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MACH_PORT_RIGHT_LABELH	        ((mach_port_right_t) 5)</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> MACH_PORT_RIGHT_NUMBER		((mach_port_right_t) 6)</span></div></pre></td></tr></table></figure>
+<p>以上就是mach端口的一些权限，看字面意思就明白，其中重要的就是send和receive</p>
+<p>在谈论了ipc的基本原语:消息、消息的发送接收、以及端口、权限等之后，我们需要进一步了解这些原语在底层的实现</p>
+<p>需要提升的姿势:</p>
+<ol>
+<li>分析有关mach ports的cve</li>
+<li>从分析入手深入ipc</li>
+</ol>
+<p>参考:《深入解析OSX&amp;iOS操作系统》<br><a href="https://jaq.alibaba.com/community/art/show?articleid=687" target="_blank" rel="external">黑云压城城欲摧-2016年iOS公开可以用漏洞总结</a></p>
 
     
 
@@ -462,21 +455,13 @@
             <nav class="material-nav mdl-color-text--grey-50 mdl-cell mdl-cell--12-col">
     <!-- Prev Nav -->
     
-        <a href="/2016/12/15/four-Blog/" id="post_nav-newer" class="prev-content">
-            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
-                <i class="material-icons">arrow_back</i>
-            </button>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            新篇
-        </a>
-    
 
     <!-- Section Spacer -->
     <div class="section-spacer"></div>
 
     <!-- Next Nav -->
     
-        <a href="/2016/12/01/two-Blog/" id="post_nav-older" class="next-content">
+        <a href="/2017/01/04/six-Blog/" id="post_nav-older" class="next-content">
             旧篇
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
