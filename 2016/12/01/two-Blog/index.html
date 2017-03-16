@@ -1,412 +1,315 @@
 <!DOCTYPE html>
-<html lang="zh">
-    <head>
-    <!-- 
-        © Material Theme
-        https://github.com/viosey/hexo-theme-material
-        Version: 1.3.0 -->
+<html lang="zh-Hans">
+<head>
 
-    <!-- Title -->
-    
-    <title>
-        
-            通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app | 
-        
-        Hello-Sherlock
-    </title>
-
-    <!-- Favicons -->
-    <link rel="icon shortcut" type="image/ico" href="/img/favicon.png">
-    <link rel="icon" sizes="192x192" href="/img/favicon.png">
-    <link rel="apple-touch-icon" href="/img/favicon.png">
-
-    <!-- Meta & Info -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0097A7">
-    <meta name="author" content="凌迟">
-    <meta name="description" content="null">
-    <meta name="keywords" content="null,tools,ptrace">
-
-    <!--iOS -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <meta name="apple-mobile-web-app-title" content="Title">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="MobileOptimized" content="480">
-
-    <!-- Add to homescreen for Chrome on Android -->
-    <meta name="mobile-web-app-capable" content="yes">
-
-    <!-- Add to homescreen for Safari on iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Hello-Sherlock">
-
-    <!-- The Open Graph protocol -->
-    <meta property="og:url" content="http://Hello-Sherlock.github.io">
-    <meta property="og:type" content="blog">
-    <meta property="og:title" content="通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app | Hello-Sherlock">
-    <meta property="og:description" content="null">
-    <meta property="og:article:tag" content="tools"> <meta property="og:article:tag" content="ptrace"> 
-
-    <!--[if lte IE 9]>
-        <link rel="stylesheet" href="/css/ie-blocker.css">
-
-        
-            <script src="/js/ie-blocker.zhCN.js"></script>
-        
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
     <![endif]-->
 
-    <!-- Import CSS -->
-    <link rel="stylesheet" href="../../../../css/material.min.css">
-    <link rel="stylesheet" href="../../../../css/style.min.css">
-    <!-- Config CSS -->
-
-
-<!-- Other Styles -->
-<style>
-  body, html {
-    font-family: Roboto, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
-  }
-
-  a {
-    color: #00838F;
-  }
-
-  .mdl-card__media,
-  #search-label,
-  #search-form-label:after,
-  #scheme-Paradox .hot_tags-count,
-  #scheme-Paradox .sidebar_archives-count,
-  #scheme-Paradox .sidebar-colored .sidebar-header,
-  #scheme-Paradox .sidebar-colored .sidebar-badge{
-    background-color: #0097A7 !important;
-  }
-
-  /* Sidebar User Drop Down Menu Text Color */
-  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:hover,
-  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:focus {
-    color: #0097A7 !important;
-  }
-
-  #post_entry-right-info,
-  .sidebar-colored .sidebar-nav li:hover > a,
-  .sidebar-colored .sidebar-nav li:hover > a i,
-  .sidebar-colored .sidebar-nav li > a:hover,
-  .sidebar-colored .sidebar-nav li > a:hover i,
-  .sidebar-colored .sidebar-nav li > a:focus i,
-  .sidebar-colored .sidebar-nav > .open > a,
-  .sidebar-colored .sidebar-nav > .open > a:hover,
-  .sidebar-colored .sidebar-nav > .open > a:focus,
-  #ds-reset #ds-ctx .ds-ctx-entry .ds-ctx-head a {
-    color: #0097A7 !important;
-  }
-
-  .toTop {
-    background: #757575 !important;
-  }
-
-  .material-layout .material-post>.material-nav,
-  .material-layout .material-index>.material-nav,
-  .material-nav a {
-    color: #757575;
-  }
-
-  #scheme-Paradox .MD-burger-layer {
-    background-color: #757575;
-  }
-
-  #scheme-Paradox #post-toc-trigger-btn {
-    color: #757575;
-  }
-
-  .post-toc a:hover {
-    color: #00838F;
-    text-decoration: underline;
-  }
-</style>
-
-
-<!-- Theme Background Related-->
-
-    <style>
-      body{
-        background-color: #F5F5F5;
-      }
-
-      /* blog_info bottom background */
-      #scheme-Paradox .material-layout .something-else .mdl-card__supporting-text{
-        background-color: #fff;
-      }
-    </style>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="凌迟" />
 
 
 
+<meta name="description" content="关于ptrace,ptrace是一个系统函数，它提供了一种可以使父进程监控其他进程的方式，还可以改变子进程中的寄存器和内核印象，因而可以实现断点调试和系统调用的跟踪。使用ptrace，可以在用户层拦截和修改系统调用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过Debugserver&lldb来调试一个被加了ptrace反调试的app">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2016/12/01/two-Blog/index.html">
+<meta property="og:site_name" content="凌迟">
+<meta property="og:description" content="关于ptrace,ptrace是一个系统函数，它提供了一种可以使父进程监控其他进程的方式，还可以改变子进程中的寄存器和内核印象，因而可以实现断点调试和系统调用的跟踪。使用ptrace，可以在用户层拦截和修改系统调用。">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/one">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/two">
+<meta property="og:updated_time" content="2016-12-01T09:49:24.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="通过Debugserver&lldb来调试一个被加了ptrace反调试的app">
+<meta name="twitter:description" content="关于ptrace,ptrace是一个系统函数，它提供了一种可以使父进程监控其他进程的方式，还可以改变子进程中的寄存器和内核印象，因而可以实现断点调试和系统调用的跟踪。使用ptrace，可以在用户层拦截和修改系统调用。">
+<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/one">
 
-<!-- Fade Effect -->
-
-    <style>
-      .fade {
-        transition: all 800ms linear;
-        -webkit-transform: translate3d(0,0,0);
-        -moz-transform: translate3d(0,0,0);
-        -ms-transform: translate3d(0,0,0);
-        -o-transform: translate3d(0,0,0);
-        transform: translate3d(0,0,0);
-        opacity: 1;
-      }
-
-      .fade.out{
-        opacity: 0;
-      }
-    </style>
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
 
-
-    <script src="../../../../js/jquery.min.js"></script>
-    <script src="../../../../js/queue.js"></script>
-
-    <!-- UC Browser Compatible -->
-    <script>
-        var agent = navigator.userAgent.toLowerCase();
-        if(agent.indexOf('ucbrowser')>0) {
-            document.write("<link rel=\"stylesheet\" href=\"../../../../css/uc.css\">");
-            alert('由于 UC 浏览器使用极旧的内核，而本网站使用了一些新的特性。\n为了您能更好的浏览，推荐使用 Chrome 或 Firefox 浏览器。');
-        }
-    </script>
-
-    
-
-    
-
-    <!-- Bing Background -->
-    
-
-    <!-- Custom Head -->
-    
-</head>
-
-
-    
-        <body id="scheme-Paradox" class="lazy">
-            <div class="material-layout  mdl-js-layout has-drawer is-upgraded">
-                
-
-                <!-- Main Container -->
-                <main class="material-layout__content" id="main">
-
-                    <!-- Top Anchor -->
-                    <div id="top"></div>
-
-                    
-                        <!-- Hamburger Button -->
-                        <button class="MD-burger-icon sidebar-toggle">
-                            <span class="MD-burger-layer"></span>
-                        </button>
-                    
-
-                    <!-- Post TOC -->
-
-    
-    <!-- Back Button -->
-    <!--
-    <div class="material-back" id="backhome-div" tabindex="0">
-        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon"
-           href="#" onclick="window.history.back();return false;"
-           target="_self"
-           role="button"
-           data-upgraded=",MaterialButton,MaterialRipple">
-            <i class="material-icons" role="presentation">arrow_back</i>
-            <span class="mdl-button__ripple-container">
-                <span class="mdl-ripple"></span>
-            </span>
-        </a>
-    </div>
-    -->
-
-    <!-- Left aligned menu below button -->
-    <button id="post-toc-trigger-btn"
-        class="mdl-button mdl-js-button mdl-button--icon">
-        <i class="material-icons">format_list_numbered</i>
-    </button>
-
-    <ul class="post-toc-wrap mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" for="post-toc-trigger-btn">
-        
-
-        <!--
-        <li class="mdl-menu__item">
-            Some Action
-        </li>
-        -->
-    </ul>
+    <link rel="alternate" href="/atom.xml" title="凌迟" type="application/atom+xml">
 
 
 
+    <link rel="shortcut icon" href="/favicon.png">
 
-<!-- Layouts -->
 
-    <!-- Post Module -->
-    <div class="material-post_container">
 
-        <div class="material-post mdl-grid">
-            <div class="mdl-card mdl-shadow--4dp mdl-cell mdl-cell--12-col">
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
 
-                <!-- Post Header(Thumbnail & Title) -->
-                
-    <!-- Paradox Post Header -->
-    
-        
-            <!-- Random Thumbnail -->
-            <div class="post_thumbnail-random mdl-card__media mdl-color-text--grey-50">
-            <script>
-    var randomNum = Math.floor(Math.random() * 19 + 1);
 
-    $('.post_thumbnail-random').css('background-image', 'url(' + '/img/random/material-' + randomNum + '.png' + ')');
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="../../../../css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app | 凌迟</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
 </script>
 
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">凌迟</a></h1>
+        </hgroup>
+
         
-    
-            <p class="article-headline-p">
-                通过Debugserver&lldb来调试一个被加了ptrace反调试的app
-            </p>
+        <p class="header-subtitle">做好你自己</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="../../../../index.html">主页</a></li>
+                        
+                            <li><a href="../../../../archives/">所有文章</a></li>
+                        
+                            <li><a href="../../../../tags/">标签云</a></li>
+                        
+                            <li><a href="../../../../about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:123@123.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="../../../../atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach/">Mach</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach-O/">Mach-O</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/OSX/">OSX</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/dyld/">dyld</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/iOS/">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/ptrace/">ptrace</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/tools/">tools</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/随笔/">随笔</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">专注于前端</div>
+                </section>
+                
+            </div>
         </div>
-
-
-
-
-
-                
-                    <!-- Paradox Post Info -->
-                    <div class="mdl-color-text--grey-700 mdl-card__supporting-text meta">
-
-    <!-- Author Avatar -->
-    <div id="author-avatar">
-        <img src="/img/avatar.png" width="44px" height="44px" alt="Author Avatar"/>
-    </div>
-    <!-- Author Name & Date -->
-    <div>
-        <strong>凌迟</strong>
-        <span>12月 01, 2016</span>
-    </div>
-
-    <div class="section-spacer"></div>
-
-    <!-- Favorite -->
-    <!--
-        <button id="article-functions-like-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon btn-like">
-            <i class="material-icons" role="presentation">favorite</i>
-            <span class="visuallyhidden">favorites</span>
-        </button>
-    -->
-
-    <!-- Qrcode -->
-    
-        <button id="article-functions-qrcode-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
-            <i class="material-icons" role="presentation">devices other</i>
-            <span class="visuallyhidden">devices other</span>
-        </button>
-        <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-qrcode-button">
-            <li class="mdl-menu__item">在其它设备中阅读本文章</li>
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAN4AAADeCAAAAAB3DOFrAAACY0lEQVR42u3aUW4rIQwF0Ox/0+0Cnh65toEZVWe+orRhOHyAdfHn508/Hzw8PDw8PDw8vJfxPvHzv///9/tk/PWvenPDw8PDu8n7stUueesprt+S4PO54eHh4d3n5a/JpztfyvLc8PDw8F7GS4rsNWxddm9Yejw8PLyX8ZIpTo6Hl557eHh4eIMytxwNtKLYx7IWPDw8vJhXvQC7+fmB+z08PDy8Ja/c0hRHCevwIg9/R01XeHh4eAd41Yh2V/xaDSaS2eLh4eE9xaseD8kIebybgJvtqnh4eHibeDkgbyaYh7y9pgQ8PDy8p3j51pyHsPmCVkNkPDw8vGd5yQadgHvhbHVZyyk1Hh4e3gFetfztRQYnmlnx8PDwbvLyZvpq6/+8UO61FODh4eHd5+X4XgyRjJAcUXh4eHhP8arRaq/8zQ+haliMh4eHd59X3Y57jVnVUjuPkgs9ZXh4eHhbeZNBe+2n1ZB3dDDg4eHhHeBNyutJcbxrifHw8PBu8iZhRK90rrYFlK/i8PDw8A7zei0CeUtWL27I42M8PDy8+7zqpX4SLpyOdL8sNB4eHt4VXm/Q3l97IUi+oHh4eHineSfK316ZPh8ZDw8P7w6v+iSv3HvYVFu+8PDw8E7zqkFANapIftsLQQqdEXh4eHgHeHkckAcKeXRbDYK/HDN4eHh4F3nJBl1tFOgdQr0YAg8PD++dvEIoEJfIk8uwzQcDHh4e3hXefNLJ8VMYBw8PD+8ir7cd51dcVWTUKLA3a8HDw8OLeRtaneLoIbrEmgTEeHh4eId5f+/Bw8PDw8PDw8N7wfML1pDjX28olq4AAAAASUVORK5CYII=">
-        </ul>
-    
-
-    <!-- Tags (bookmark) -->
-    
-    <button id="article-functions-viewtags-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
-        <i class="material-icons" role="presentation">bookmark</i>
-        <span class="visuallyhidden">bookmark</span>
-    </button>
-    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-viewtags-button">
-        <li class="mdl-menu__item">
-        <a class="post_tag-link" href="../../../../tags/ptrace/">ptrace</a></li><li class="mdl-menu__item"><a class="post_tag-link" href="../../../../tags/tools/">tools</a>
-    </ul>
-    
-
-    <!-- Share -->
-    <button id="article-fuctions-share-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
-    <i class="material-icons" role="presentation">share</i>
-    <span class="visuallyhidden">share</span>
-</button>
-<ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-fuctions-share-button">
-    
-
-    
-
-    <!-- Share Weibo -->
-    
-        <a class="post_share-link" href="http://service.weibo.com/share/share.php?appkey=&title=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app&url=http://Hello-Sherlock.github.io/&pic=&searchPic=false&style=simple" target="_blank">
-            <li class="mdl-menu__item">
-                分享到微博
-            </li>
-        </a>
-    
-
-    <!-- Share Twitter -->
-    
-        <a class="post_share-link" href="https://twitter.com/intent/tweet?text=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app&url=http://Hello-Sherlock.github.io/&via=凌迟" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Twitter
-            </li>
-        </a>
-    
-
-    <!-- Share Facebook -->
-    
-        <a class="post_share-link" href="https://www.facebook.com/sharer/sharer.php?u=http://Hello-Sherlock.github.io/" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Facebook
-            </li>
-        </a>
-    
-
-    <!-- Share Google+ -->
-    
-        <a class="post_share-link" href="https://plus.google.com/share?url=http://Hello-Sherlock.github.io/" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Google+
-            </li>
-        </a>
-    
-
-    <!-- Share LinkedIn -->
-    
-        <a class="post_share-link" href="https://www.linkedin.com/shareArticle?mini=true&url=http://Hello-Sherlock.github.io/&title=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 LinkedIn
-            </li>
-        </a>
-    
-
-    <!-- Share QQ -->
-    
-        <a class="post_share-link" href="http://connect.qq.com/widget/shareqq/index.html?site=Hello-Sherlock&title=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app&summary=null&pics=http://Hello-Sherlock.github.io/img/favicon.png&url=http://Hello-Sherlock.github.io" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 QQ
-            </li>
-        </a>
-    
-
-    <!-- Share Telegram -->
-    
-        <a class="post_share-link" href="https://telegram.me/share/url?url=http://Hello-Sherlock.github.io/&text=通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Telegram
-            </li>
-        </a>
-    
-</ul>
-
+    </header>                
 </div>
-
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">凌迟</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">凌迟</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">做好你自己</p>
+            
+            <nav class="header-menu">
+                <ul>
                 
+                    <li><a href="../../../../index.html">主页</a></li>
+                
+                    <li><a href="../../../../archives/">所有文章</a></li>
+                
+                    <li><a href="../../../../tags/">标签云</a></li>
+                
+                    <li><a href="../../../../about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:123@123.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="../../../../atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-two-Blog" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="" class="article-date">
+      <time datetime="2016-12-01T08:21:58.000Z" itemprop="datePublished">2016-12-01</time>
+</a>
 
-                <!-- Post Content -->
-                <div id="post-content" class="mdl-color-text--grey-700 mdl-card__supporting-text fade out">
+
+    </div>
+  
+  <div class="article-inner">
     
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../../../../tags/ptrace/">ptrace</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../../../../tags/tools/">tools</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
         <blockquote>
 <p>关于ptrace,ptrace是一个系统函数，它提供了一种可以使父进程监控其他进程的方式，还可以改变<br>子进程中的寄存器和内核印象，因而可以实现断点调试和系统调用的跟踪。<br>使用ptrace，可以在用户层拦截和修改系统调用。</p>
 </blockquote>
@@ -426,347 +329,221 @@
 <figure class="highlight armasm"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">┌─(~)─────────────────────────(linguocheng<span class="comment">@Sherlock-HolmesdeMacBook-Pro:s002)─┐</span></div><div class="line">└─(<span class="number">11</span>:<span class="number">27</span>:<span class="number">21</span>)──&gt; lldb                                        <span class="number">146</span> ↵ ──(四,<span class="number">120</span></div><div class="line">(lldb) process connect connect://<span class="number">192</span>.<span class="number">168</span>.<span class="number">1</span>.<span class="number">102</span>:<span class="number">1234</span></div><div class="line"><span class="symbol">Process</span> <span class="number">1996</span> stopped</div><div class="line">* thread <span class="number">#1</span>: tid = <span class="number">0x21a2</span>, <span class="number">0x322a549c</span> libsystem_kernel.dylib`mach_msg_trap + <span class="number">20</span>, name = <span class="string">'RouMainThread'</span>, queue = <span class="string">'com.apple.main-thread'</span>, stop reason = signal SIGSTOP</div><div class="line">    frame <span class="number">#0</span>: <span class="number">0x322a549c</span> libsystem_kernel.dylib`mach_msg_trap + <span class="number">20</span></div><div class="line"><span class="symbol">libsystem_kernel.dylib</span>`mach_msg_trap:</div><div class="line">-&gt;  <span class="number">0x322a549c</span> &lt;+<span class="number">20</span>&gt;: <span class="keyword">pop </span>   &#123;<span class="built_in">r4</span>, <span class="built_in">r5</span>, <span class="built_in">r6</span>, <span class="built_in">r8</span>&#125;</div><div class="line">    <span class="number">0x322a54a0</span> &lt;+<span class="number">24</span>&gt;: <span class="keyword">bx </span>    <span class="built_in">lr</span></div><div class="line"></div><div class="line"><span class="symbol">libsystem_kernel.dylib</span>`mach_msg_overwrite_trap:</div><div class="line">    <span class="number">0x322a54a4</span> &lt;+<span class="number">0</span>&gt;:  <span class="keyword">mov </span>   <span class="built_in">r12</span>, <span class="built_in">sp</span></div><div class="line">    <span class="number">0x322a54a8</span> &lt;+<span class="number">4</span>&gt;:  <span class="keyword">push </span>  &#123;<span class="built_in">r4</span>, <span class="built_in">r5</span>, <span class="built_in">r6</span>, <span class="built_in">r8</span>&#125;</div><div class="line">(lldb)</div></pre></td></tr></table></figure>
 <p>参考:<a href="http://bbs.iosre.com/t/7-2-0-ios/770" target="_blank" rel="external">http://bbs.iosre.com/t/7-2-0-ios/770</a><br>    <a href="http://www.linuxjournal.com/article/6100?page=0,1" target="_blank" rel="external">http://www.linuxjournal.com/article/6100?page=0,1</a></p>
 
+      
+    </div>
     
-
+  </div>
+  
     
-</div>
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="">通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
+        <p><span>发布时间:</span>2016-12-01, 16:21:58</p>
+        <p><span>最后更新:</span>2016-12-01, 17:49:24</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="" title="通过Debugserver&amp;lldb来调试一个被加了ptrace反调试的app">http://Hello-Sherlock.github.io/2016/12/01/two-Blog/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2016/12/01/two-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
 
 
-                
 
-                <!-- Post Comments -->
-                
-                    
-
-
-
-
-                
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="../../06/three-Blog/">
+                    Mach-O文件格式
+                </a>
             </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="../../../11/24/one-Blog/">
+                    Introspy对iOS应用黑盒测试
+                </a>
+            </div>
+        
+    </nav>
 
-            <!-- Post Prev & Next Nav -->
-            <nav class="material-nav mdl-color-text--grey-50 mdl-cell mdl-cell--12-col">
-    <!-- Prev Nav -->
-    
-        <a href="/2016/12/06/three-Blog/" id="post_nav-newer" class="prev-content">
-            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
-                <i class="material-icons">arrow_back</i>
-            </button>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            新篇
-        </a>
-    
+  
+</article>
 
-    <!-- Section Spacer -->
-    <div class="section-spacer"></div>
-
-    <!-- Next Nav -->
-    
-        <a href="/2016/11/24/one-Blog/" id="post_nav-older" class="next-content">
-            旧篇
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
-                <i class="material-icons">arrow_forward</i>
-            </button>
-        </a>
-    
-</nav>
-
-        </div>
-    </div>
-
-
-
-                    
-                        <!-- Overlay For Active Sidebar -->
-<div class="sidebar-overlay"></div>
-
-<!-- Material sidebar -->
-<aside id="sidebar" class="sidebar sidebar-colored sidebar-fixed-left" role="navigation">
-    <div id="sidebar-main">
-        <!-- Sidebar Header -->
-        <div class="sidebar-header header-cover" style="background-image: url(/img/sidebar_header.png);">
-    <!-- Top bar -->
-    <div class="top-bar"></div>
-
-    <!-- Sidebar toggle button -->
-    <button type="button" class="sidebar-toggle mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" style="display: initial;" data-upgraded=",MaterialButton,MaterialRipple">
-        <i class="material-icons">clear_all</i>
-        <span class="mdl-button__ripple-container">
-            <span class="mdl-ripple">
-            </span>
-        </span>
-    </button>
-
-    <!-- Sidebar Avatar -->
-    <div class="sidebar-image">
-        <img src="/img/avatar.png" alt="凌迟's avatar">
-    </div>
-
-    <!-- Sidebar Email -->
-    <a data-toggle="dropdown" class="sidebar-brand" href="#settings-dropdown">
-        hisherlock@icloud.com
-        <b class="caret"></b>
-    </a>
-</div>
-
-
-        <!-- Sidebar Navigation  -->
-        <ul class="nav sidebar-nav">
-    <!-- User dropdown  -->
-    <li class="dropdown">
-        <ul id="settings-dropdown" class="dropdown-menu">
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
             
-                <li>
-                    <a href="#" target="_blank" title="Email Me">
-                        
-                            <i class="material-icons sidebar-material-icons sidebar-indent-left1pc-element">email</i>
-                        
-                        Email Me
-                    </a>
-                </li>
-            
-        </ul>
-    </li>
-
-    <!-- Homepage -->
-    
-        <li id="sidebar-first-li">
-            <a href="/" target="_self">
-                
-                    <i class="material-icons sidebar-material-icons">home</i>
-                
-                主页
-            </a>
-        </li>
         
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"通过Debugserver&lldb来调试一个被加了ptrace反调试的app　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
     
 
-    <!-- Archives  -->
     
-        <li class="dropdown">
-            <a href="#" class="ripple-effect dropdown-toggle" data-toggle="dropdown">
-                
-                    <i class="material-icons sidebar-material-icons">inbox</i>
-                
-                    归档
-                <b class="caret"></b>
-            </a>
-            <ul class="dropdown-menu">
-            <li>
-                <a class="sidebar_archives-link" href="../../../../archives/2017/02/">二月 2017<span class="sidebar_archives-count">1</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2017/01/">一月 2017<span class="sidebar_archives-count">1</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2016/12/">十二月 2016<span class="sidebar_archives-count">4</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2016/11/">十一月 2016<span class="sidebar_archives-count">2</span></a>
-            </ul>
-        </li>
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
         
-    
-
-    <!-- Categories  -->
-    
-
-    <!-- Pages  -->
-    
-        <li>
-            <a href="/about" title="关于我">
-                
-                    <i class="material-icons sidebar-material-icons">person</i>
-                
-                关于我
+            <a href="../../06/three-Blog/" title="上一篇: Mach-O文件格式">
+                <i class="fa fa-angle-left"></i>
             </a>
-        </li>
         
-    
 
-    <!-- Article Number  -->
-    
-</ul>
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
-
-        <!-- Sidebar Footer -->
-        <!--
-I'm glad you use this theme, the development is no so easy, I hope you can keep the copyright, I will thank you so much.
-If you still want to delete the copyrights, could you still retain the first one? Which namely "Theme Material"
-It will not impact the appearance and can give developers a lot of support :)
-
-很高兴您使用并喜欢该主题，开发不易 十分谢谢与希望您可以保留一下版权声明。
-如果您仍然想删除的话 能否只保留第一项呢？即 "Theme Material"
-它不会影响美观并可以给开发者很大的支持和动力。 :)
--->
-
-<!-- Sidebar Divider -->
-
-    <div class="sidebar-divider"></div>
-
-
-<!-- Theme Material -->
-
-
-<!-- Help & Support -->
-<!--
-
--->
-
-<!-- Feedback -->
-<!--
-
--->
-
-<!-- About Theme -->
-<!--
-
--->
-
+        
+            <a href="../../../11/24/one-Blog/" title="下一篇: Introspy对iOS应用黑盒测试">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
     </div>
 
-    <!-- Sidebar Image -->
-    
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="../../../../2017/02/12/seven-BLOG/">浅谈Mach IPC</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2017/01/04/six-Blog/">Mach-O加载流程</a></li><li class="post-list-item"><a class="post-list-link" href="../../20/five-Blog/">某记账App内购破解</a></li><li class="post-list-item"><a class="post-list-link" href="../../15/four-Blog/">OSX内核调试</a></li><li class="post-list-item"><a class="post-list-link" href="../../06/three-Blog/">Mach-O文件格式</a></li><li class="post-list-item"><a class="post-list-link" href="">通过Debugserver&lldb来调试一个被加了ptrace反调试的app</a></li><li class="post-list-item"><a class="post-list-link" href="../../../11/24/one-Blog/">Introspy对iOS应用黑盒测试</a></li><li class="post-list-item"><a class="post-list-link" href="../../../11/24/hello-world/">第一篇博客</a></li></ul>
 
-</aside>
 
-                    
 
-                    
-                        <!-- Footer Top Button -->
-                        <div class="toTop-wrap">
-    <a href="#top" class="toTop">
-        <i class="material-icons footer_top-i">expand_less</i>
-    </a>
+
+    <script>
+        
+    </script>
 </div>
-
-                    
-
-                    <!--Footer-->
-<footer class="mdl-mini-footer" id="bottom">
-    
-        <!-- Paradox Footer Left Section -->
-        <div class="mdl-mini-footer--left-section sns-list">
-    <!-- Twitter -->
-    
-
-    <!-- Facebook -->
-    
-
-    <!-- Google + -->
-    
-
-    <!-- Weibo -->
-    
-
-    <!-- Instagram -->
-    
-
-    <!-- Tumblr -->
-    
-
-    <!-- Github -->
-    
-        <a href="https://github.com/Hello-Sherlock" target="_blank">
-            <button class="mdl-mini-footer--social-btn social-btn" style="background-image: url(/img/footer/footer_ico-github.png);">
-                <span class="visuallyhidden">Github</span>
-            </button><!--
-     --></a>
-    
-
-    <!-- LinkedIn -->
-    
-
-    <!-- Zhihu -->
-    
-
-    <!-- Bilibili -->
-    
-
-    <!-- Telegram -->
-    
-</div>
-
-
-        <!--Copyright-->
-        <div id="copyright">
-            Copyright&nbsp;©&nbsp;
-            <script type="text/javascript">
-                var fd = new Date();
-                document.write(fd.getFullYear());
-            </script>
-            &nbsp;Hello-Sherlock
-        </div>
-
-        <!-- Paradox Footer Right Section -->
-
-        <!--
-        I am glad you use this theme, the development is no so easy, I hope you can keep the copyright.
-        It will not impact the appearance and can give developers a lot of support :)
-
-        很高兴您使用该主题，开发不易，希望您可以保留一下版权声明。
-        它不会影响美观并可以给开发者很大的支持。 :)
-        -->
-
-        <div class="mdl-mini-footer--right-section">
-            <div>
-                <div class="footer-develop-div">Powered by <a href="https://hexo.io" target="_blank" class="footer-develop-a">Hexo</a></div>
-                <div class="footer-develop-div">Theme - <a href="https://github.com/viosey/hexo-theme-material" target="_blank" class="footer-develop-a">Material</a></div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2017 凌迟
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
             </div>
         </div>
-    
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
 </footer>
-
-
-                    <!-- Import File -->
-<script src="../../../../js/lazyload.min.js"></script>
-<script src="../../../../js/js.min.js"></script>
-<script src="../../../../js/nprogress.js"></script>
-
-<script type="text/javascript">
-    NProgress.configure({
-        showSpinner: true
-    });
-    NProgress.start();
-    $('#nprogress .bar').css({
-        'background': '#29d'
-    });
-    $('#nprogress .peg').css({
-        'box-shadow': '0 0 10px #29d, 0 0 15px #29d'
-    });
-    $('#nprogress .spinner-icon').css({
-        'border-top-color': '#29d',
-        'border-left-color': '#29d'
-    });
-    setTimeout(function() {
-        NProgress.done();
-        $('.fade').removeClass('out');
-    }, 800);
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- Swiftye -->
-
-
-<!-- Local Search-->
-
-
-<!-- Window Load-->
-<script>
-    $(window).load(function() {
-        // Post_Toc parent position fixed
-        $('.post-toc-wrap').parent('.mdl-menu__container').css('position', 'fixed');
-    });
-</script>
-
-<!-- MathJax Load-->
-
-
-                </main>
-            </div>
-        </body>
+    </div>
     
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+
+  {% if theme.canvas_nest %}
+<script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+{% endif %}
+
+</body>
 </html>

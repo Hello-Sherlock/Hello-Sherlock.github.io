@@ -1,412 +1,331 @@
 <!DOCTYPE html>
-<html lang="zh">
-    <head>
-    <!-- 
-        © Material Theme
-        https://github.com/viosey/hexo-theme-material
-        Version: 1.3.0 -->
+<html lang="zh-Hans">
+<head>
 
-    <!-- Title -->
-    
-    <title>
-        
-            某记账App内购破解 | 
-        
-        Hello-Sherlock
-    </title>
-
-    <!-- Favicons -->
-    <link rel="icon shortcut" type="image/ico" href="/img/favicon.png">
-    <link rel="icon" sizes="192x192" href="/img/favicon.png">
-    <link rel="apple-touch-icon" href="/img/favicon.png">
-
-    <!-- Meta & Info -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0097A7">
-    <meta name="author" content="凌迟">
-    <meta name="description" content="null">
-    <meta name="keywords" content="null,iOS">
-
-    <!--iOS -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <meta name="apple-mobile-web-app-title" content="Title">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="MobileOptimized" content="480">
-
-    <!-- Add to homescreen for Chrome on Android -->
-    <meta name="mobile-web-app-capable" content="yes">
-
-    <!-- Add to homescreen for Safari on iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Hello-Sherlock">
-
-    <!-- The Open Graph protocol -->
-    <meta property="og:url" content="http://Hello-Sherlock.github.io">
-    <meta property="og:type" content="blog">
-    <meta property="og:title" content="某记账App内购破解 | Hello-Sherlock">
-    <meta property="og:description" content="null">
-    <meta property="og:article:tag" content="iOS"> 
-
-    <!--[if lte IE 9]>
-        <link rel="stylesheet" href="/css/ie-blocker.css">
-
-        
-            <script src="/js/ie-blocker.zhCN.js"></script>
-        
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
     <![endif]-->
 
-    <!-- Import CSS -->
-    <link rel="stylesheet" href="../../../../css/material.min.css">
-    <link rel="stylesheet" href="../../../../css/style.min.css">
-    <!-- Config CSS -->
-
-
-<!-- Other Styles -->
-<style>
-  body, html {
-    font-family: Roboto, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
-  }
-
-  a {
-    color: #00838F;
-  }
-
-  .mdl-card__media,
-  #search-label,
-  #search-form-label:after,
-  #scheme-Paradox .hot_tags-count,
-  #scheme-Paradox .sidebar_archives-count,
-  #scheme-Paradox .sidebar-colored .sidebar-header,
-  #scheme-Paradox .sidebar-colored .sidebar-badge{
-    background-color: #0097A7 !important;
-  }
-
-  /* Sidebar User Drop Down Menu Text Color */
-  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:hover,
-  #scheme-Paradox .sidebar-colored .sidebar-nav>.dropdown>.dropdown-menu>li>a:focus {
-    color: #0097A7 !important;
-  }
-
-  #post_entry-right-info,
-  .sidebar-colored .sidebar-nav li:hover > a,
-  .sidebar-colored .sidebar-nav li:hover > a i,
-  .sidebar-colored .sidebar-nav li > a:hover,
-  .sidebar-colored .sidebar-nav li > a:hover i,
-  .sidebar-colored .sidebar-nav li > a:focus i,
-  .sidebar-colored .sidebar-nav > .open > a,
-  .sidebar-colored .sidebar-nav > .open > a:hover,
-  .sidebar-colored .sidebar-nav > .open > a:focus,
-  #ds-reset #ds-ctx .ds-ctx-entry .ds-ctx-head a {
-    color: #0097A7 !important;
-  }
-
-  .toTop {
-    background: #757575 !important;
-  }
-
-  .material-layout .material-post>.material-nav,
-  .material-layout .material-index>.material-nav,
-  .material-nav a {
-    color: #757575;
-  }
-
-  #scheme-Paradox .MD-burger-layer {
-    background-color: #757575;
-  }
-
-  #scheme-Paradox #post-toc-trigger-btn {
-    color: #757575;
-  }
-
-  .post-toc a:hover {
-    color: #00838F;
-    text-decoration: underline;
-  }
-</style>
-
-
-<!-- Theme Background Related-->
-
-    <style>
-      body{
-        background-color: #F5F5F5;
-      }
-
-      /* blog_info bottom background */
-      #scheme-Paradox .material-layout .something-else .mdl-card__supporting-text{
-        background-color: #fff;
-      }
-    </style>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="凌迟" />
 
 
 
+<meta name="description" content="简介:此app名称为EasyCost，是笔者目前为止用过的用户界面相对友好的一款记账app，奈何用了很久之后才发现有个所谓的高级功能，咦，看到自动账单这个功能，很高级有木有，鉴于最近才转逆向，于是抱着研究的心态尝试破解，也希望对一些同时刚接触逆向的新手朋友一点点启发。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="某记账App内购破解">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2016/12/20/five-Blog/index.html">
+<meta property="og:site_name" content="凌迟">
+<meta property="og:description" content="简介:此app名称为EasyCost，是笔者目前为止用过的用户界面相对友好的一款记账app，奈何用了很久之后才发现有个所谓的高级功能，咦，看到自动账单这个功能，很高级有木有，鉴于最近才转逆向，于是抱着研究的心态尝试破解，也希望对一些同时刚接触逆向的新手朋友一点点启发。">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/IMG_2811.PNG">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/FCEB9BAB-CD0C-43D4-B426-D06C898173B3.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/F9450BEC-1327-422A-ABB2-329261226707.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/9C4A794D-EA81-48A9-9CCC-B35A4732E574.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/45C6EDA8-9524-40C6-AA3E-B30F13FF2595.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/0968E158-257D-4297-9079-4E791557F421.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/D107C0B6-4633-459D-8B45-9235708A3C43.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/A5D1E3ED-594C-443C-B2B5-92CE6F6FF86D.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/2B333515-BCE0-4FC8-90A8-669D05F9E078.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/33975B1D-E93E-4299-BC26-2A7CAB3E91C6.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/ECAB072D-B5A4-49C6-AB59-BCA32DB944D0.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/A9D9E77F-064B-412F-AC02-0B51AB3C0FC2.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/1506AF86-8E46-4436-9969-08F0A8432331.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/BBC752AF-F902-48FD-8911-290F35A0A589.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/0294818F-275B-43E2-ABA8-D8CA789D0754.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161118-1@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161118-2@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161118-3@2x.png">
+<meta property="og:updated_time" content="2017-03-02T00:41:52.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="某记账App内购破解">
+<meta name="twitter:description" content="简介:此app名称为EasyCost，是笔者目前为止用过的用户界面相对友好的一款记账app，奈何用了很久之后才发现有个所谓的高级功能，咦，看到自动账单这个功能，很高级有木有，鉴于最近才转逆向，于是抱着研究的心态尝试破解，也希望对一些同时刚接触逆向的新手朋友一点点启发。">
+<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/IMG_2811.PNG">
 
-<!-- Fade Effect -->
-
-    <style>
-      .fade {
-        transition: all 800ms linear;
-        -webkit-transform: translate3d(0,0,0);
-        -moz-transform: translate3d(0,0,0);
-        -ms-transform: translate3d(0,0,0);
-        -o-transform: translate3d(0,0,0);
-        transform: translate3d(0,0,0);
-        opacity: 1;
-      }
-
-      .fade.out{
-        opacity: 0;
-      }
-    </style>
-
-
-
-    <script src="../../../../js/jquery.min.js"></script>
-    <script src="../../../../js/queue.js"></script>
-
-    <!-- UC Browser Compatible -->
-    <script>
-        var agent = navigator.userAgent.toLowerCase();
-        if(agent.indexOf('ucbrowser')>0) {
-            document.write("<link rel=\"stylesheet\" href=\"../../../../css/uc.css\">");
-            alert('由于 UC 浏览器使用极旧的内核，而本网站使用了一些新的特性。\n为了您能更好的浏览，推荐使用 Chrome 或 Firefox 浏览器。');
-        }
-    </script>
-
-    
-
-    
-
-    <!-- Bing Background -->
-    
-
-    <!-- Custom Head -->
-    
-</head>
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
 
-    
-        <body id="scheme-Paradox" class="lazy">
-            <div class="material-layout  mdl-js-layout has-drawer is-upgraded">
-                
-
-                <!-- Main Container -->
-                <main class="material-layout__content" id="main">
-
-                    <!-- Top Anchor -->
-                    <div id="top"></div>
-
-                    
-                        <!-- Hamburger Button -->
-                        <button class="MD-burger-icon sidebar-toggle">
-                            <span class="MD-burger-layer"></span>
-                        </button>
-                    
-
-                    <!-- Post TOC -->
-
-    
-    <!-- Back Button -->
-    <!--
-    <div class="material-back" id="backhome-div" tabindex="0">
-        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon"
-           href="#" onclick="window.history.back();return false;"
-           target="_self"
-           role="button"
-           data-upgraded=",MaterialButton,MaterialRipple">
-            <i class="material-icons" role="presentation">arrow_back</i>
-            <span class="mdl-button__ripple-container">
-                <span class="mdl-ripple"></span>
-            </span>
-        </a>
-    </div>
-    -->
-
-    <!-- Left aligned menu below button -->
-    <button id="post-toc-trigger-btn"
-        class="mdl-button mdl-js-button mdl-button--icon">
-        <i class="material-icons">format_list_numbered</i>
-    </button>
-
-    <ul class="post-toc-wrap mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" for="post-toc-trigger-btn">
-        <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1-1分析源代码结构，并定位关键函数"><span class="post-toc-number">1.</span> <span class="post-toc-text">1.1分析源代码结构，并定位关键函数</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#1-1-1-首先使用dumpdecrypted砸壳"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">1.1.1 首先使用dumpdecrypted砸壳</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#1-1-2-class-dump获取-h头文件"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">1.1.2 class-dump获取.h头文件</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#1-1-3cycript打印视图层次"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">1.1.3cycript打印视图层次</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#1-1-4-debugserver-lldb动态调试确认关键函数"><span class="post-toc-number">1.4.</span> <span class="post-toc-text">1.1.4 debugserver+lldb动态调试确认关键函数</span></a></li></ol></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1-2编写tweak"><span class="post-toc-number">2.</span> <span class="post-toc-text">1.2编写tweak</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2-0关于防护措施杂谈"><span class="post-toc-number">3.</span> <span class="post-toc-text">2.0关于防护措施杂谈</span></a></li></ol>
-
-        <!--
-        <li class="mdl-menu__item">
-            Some Action
-        </li>
-        -->
-    </ul>
+    <link rel="alternate" href="/atom.xml" title="凌迟" type="application/atom+xml">
 
 
 
+    <link rel="shortcut icon" href="/favicon.png">
 
-<!-- Layouts -->
 
-    <!-- Post Module -->
-    <div class="material-post_container">
 
-        <div class="material-post mdl-grid">
-            <div class="mdl-card mdl-shadow--4dp mdl-cell mdl-cell--12-col">
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
 
-                <!-- Post Header(Thumbnail & Title) -->
-                
-    <!-- Paradox Post Header -->
-    
-        
-            <!-- Random Thumbnail -->
-            <div class="post_thumbnail-random mdl-card__media mdl-color-text--grey-50">
-            <script>
-    var randomNum = Math.floor(Math.random() * 19 + 1);
 
-    $('.post_thumbnail-random').css('background-image', 'url(' + '/img/random/material-' + randomNum + '.png' + ')');
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="../../../../css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>某记账App内购破解 | 凌迟</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
 </script>
 
+
+    <script> yiliaConfig.jquery_ui = [false]; </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">凌迟</a></h1>
+        </hgroup>
+
         
-    
-            <p class="article-headline-p">
-                某记账App内购破解
-            </p>
+        <p class="header-subtitle">做好你自己</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="../../../../index.html">主页</a></li>
+                        
+                            <li><a href="../../../../archives/">所有文章</a></li>
+                        
+                            <li><a href="../../../../tags/">标签云</a></li>
+                        
+                            <li><a href="../../../../about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:123@123.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="../../../../atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach/">Mach</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach-O/">Mach-O</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/OSX/">OSX</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/dyld/">dyld</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/iOS/">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/ptrace/">ptrace</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/tools/">tools</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/随笔/">随笔</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">专注于前端</div>
+                </section>
+                
+            </div>
         </div>
-
-
-
-
-
-                
-                    <!-- Paradox Post Info -->
-                    <div class="mdl-color-text--grey-700 mdl-card__supporting-text meta">
-
-    <!-- Author Avatar -->
-    <div id="author-avatar">
-        <img src="/img/avatar.png" width="44px" height="44px" alt="Author Avatar"/>
-    </div>
-    <!-- Author Name & Date -->
-    <div>
-        <strong>凌迟</strong>
-        <span>12月 20, 2016</span>
-    </div>
-
-    <div class="section-spacer"></div>
-
-    <!-- Favorite -->
-    <!--
-        <button id="article-functions-like-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon btn-like">
-            <i class="material-icons" role="presentation">favorite</i>
-            <span class="visuallyhidden">favorites</span>
-        </button>
-    -->
-
-    <!-- Qrcode -->
-    
-        <button id="article-functions-qrcode-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
-            <i class="material-icons" role="presentation">devices other</i>
-            <span class="visuallyhidden">devices other</span>
-        </button>
-        <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-qrcode-button">
-            <li class="mdl-menu__item">在其它设备中阅读本文章</li>
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPYAAAD2CAAAAADAeSUUAAACzUlEQVR42u3aS3LbQAwFQN//0skBVKbfA+RENdNcsSiRYsMLGJ+vP1ceX9jY2NjY2NjY2Ngfyf6Kj9e7Xp/w3ZXnu16v/wCYvTM2Njb20ezkZ/K7vvs0D1AevuKdsbGxsS9gJ0nl+TxJe5vUuEmE2NjY2NhtGZAH5TlAz8kJGxsbG3uTwPJGT16oPBct2NjY2Nj7plJ73oKfMf+tl4aNjY398ey2qPiE838638bGxsb+YHZ75KXIu4bESbqK3hwbGxv7UHaeGDbUfRLavCc2Njb22ex2paZdrHlb+hkt7mBjY2PfzP6N8iAZ5ebrPm24sbGxsU9lJ//uPz90tuLTjodnZRI2Njb2Pey2uZMv2eybRG2If3G+jY2Njf2R7Dyp5CVK0gDaj4fbcggbGxv7HnY7NsjLldnwIG8kDXtp2NjY2AexkwbQJv3M2kPvSmPY2NjYp7Lz9coNaT8S2BQ22NjY2Gez859sWz+zdclNm+mH69jY2NhHs9vFms2KZNIAygNdNJ6wsbGxj2bv2zftGHg/bEhCho2NjX0De7YW2Tb9Z2Pa9gk//GGwsbGxj2YnZcCmobN/5mzMgI2NjX0Dezay3SS89nw2SCgqMGxsbOwj2O0L7a+0g9vNSBgbGxv7BnYLzguANkG2zaNibIyNjY19KLtNA/uhwqw51Q6esbGxsW9jt8sx+1T33oWeqNTBxsbGvoCdN5L2gWibVrNvYmNjY2PPCo987SZJYLOGFDY2NvY97PbIAUnBs1nByYOOjY2NfTZ7lRJGq5az8LXpM2oqYWNjYx/ETpJWUpa0aa8tP9onY2NjY9/GnqWitjxoF31m7SRsbGxs7HaI267XzJZ+8kFFMRXBxsbGvpKdpKi80d9+Jx9jYGNjY9/Gbge3OXg4mo2Di42NjY09a9bMUl0+JJh989t7sbGxsQ9l33NgY2NjY2NjY2Njf8zxFzGEC20NnVESAAAAAElFTkSuQmCC">
-        </ul>
-    
-
-    <!-- Tags (bookmark) -->
-    
-    <button id="article-functions-viewtags-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
-        <i class="material-icons" role="presentation">bookmark</i>
-        <span class="visuallyhidden">bookmark</span>
-    </button>
-    <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-functions-viewtags-button">
-        <li class="mdl-menu__item">
-        <a class="post_tag-link" href="../../../../tags/iOS/">iOS</a>
-    </ul>
-    
-
-    <!-- Share -->
-    <button id="article-fuctions-share-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
-    <i class="material-icons" role="presentation">share</i>
-    <span class="visuallyhidden">share</span>
-</button>
-<ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="article-fuctions-share-button">
-    
-
-    
-
-    <!-- Share Weibo -->
-    
-        <a class="post_share-link" href="http://service.weibo.com/share/share.php?appkey=&title=某记账App内购破解&url=http://Hello-Sherlock.github.io/&pic=&searchPic=false&style=simple" target="_blank">
-            <li class="mdl-menu__item">
-                分享到微博
-            </li>
-        </a>
-    
-
-    <!-- Share Twitter -->
-    
-        <a class="post_share-link" href="https://twitter.com/intent/tweet?text=某记账App内购破解&url=http://Hello-Sherlock.github.io/&via=凌迟" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Twitter
-            </li>
-        </a>
-    
-
-    <!-- Share Facebook -->
-    
-        <a class="post_share-link" href="https://www.facebook.com/sharer/sharer.php?u=http://Hello-Sherlock.github.io/" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Facebook
-            </li>
-        </a>
-    
-
-    <!-- Share Google+ -->
-    
-        <a class="post_share-link" href="https://plus.google.com/share?url=http://Hello-Sherlock.github.io/" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Google+
-            </li>
-        </a>
-    
-
-    <!-- Share LinkedIn -->
-    
-        <a class="post_share-link" href="https://www.linkedin.com/shareArticle?mini=true&url=http://Hello-Sherlock.github.io/&title=某记账App内购破解" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 LinkedIn
-            </li>
-        </a>
-    
-
-    <!-- Share QQ -->
-    
-        <a class="post_share-link" href="http://connect.qq.com/widget/shareqq/index.html?site=Hello-Sherlock&title=某记账App内购破解&summary=null&pics=http://Hello-Sherlock.github.io/img/favicon.png&url=http://Hello-Sherlock.github.io" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 QQ
-            </li>
-        </a>
-    
-
-    <!-- Share Telegram -->
-    
-        <a class="post_share-link" href="https://telegram.me/share/url?url=http://Hello-Sherlock.github.io/&text=某记账App内购破解" target="_blank">
-            <li class="mdl-menu__item">
-                分享到 Telegram
-            </li>
-        </a>
-    
-</ul>
-
+    </header>                
 </div>
-
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">凌迟</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">凌迟</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">做好你自己</p>
+            
+            <nav class="header-menu">
+                <ul>
                 
+                    <li><a href="../../../../index.html">主页</a></li>
+                
+                    <li><a href="../../../../archives/">所有文章</a></li>
+                
+                    <li><a href="../../../../tags/">标签云</a></li>
+                
+                    <li><a href="../../../../about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:123@123.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="../../../../atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-five-Blog" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="" class="article-date">
+      <time datetime="2016-12-20T00:11:59.000Z" itemprop="datePublished">2016-12-20</time>
+</a>
 
-                <!-- Post Content -->
-                <div id="post-content" class="mdl-color-text--grey-700 mdl-card__supporting-text fade out">
+
+    </div>
+  
+  <div class="article-inner">
     
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      某记账App内购破解
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../../../../tags/iOS/">iOS</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
         <blockquote>
 <p>简介:此app名称为EasyCost，是笔者目前为止用过的用户界面相对友好的一款记账app，奈何用了很久之后才发现有个所谓的高级功能，咦，看到自动账单这个功能，很高级有木有，鉴于最近才转逆向，于是抱着研究的心态尝试破解，也希望对一些同时刚接触逆向的新手朋友一点点启发。</p>
 </blockquote>
@@ -473,347 +392,221 @@
 <p><strong>小结</strong>：本文为这款记账软件制作了去除高级功能限制插件，让我们可以更全面的使用这款app，虽然最后的代码只有几行，但整个分析过程却是一环扣一环，哪怕其中一环出错不注意就会被误导，逆向这款app虽然说挺简单的，但主要思路差不多都是这样，希望能为正在学习并且自己对心仪的app无从下手的朋友提供一些帮助。</p>
 <p>有些朋友觉得本文运气成分很大，没错，逆向工程不比app开发，没有官方文档作为参考，最有效的方式就是不断尝试，不断犯错，再不断改进，我们面对的总是一些未知的东西，或许你离成功只差一步，但却因为看不到前方，而走向一条更困难的路，我们在计算机的行业里只有不断探索，才有可能逐渐超越自我，小弟也是初学逆向，对自己说也对路上的朋友说，愿我们在探索的道路上一直勇敢下去。</p>
 
+      
+    </div>
     
-
+  </div>
+  
     
-</div>
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="">某记账App内购破解</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
+        <p><span>发布时间:</span>2016-12-20, 08:11:59</p>
+        <p><span>最后更新:</span>2017-03-02, 08:41:52</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="" title="某记账App内购破解">http://Hello-Sherlock.github.io/2016/12/20/five-Blog/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2016/12/20/five-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
 
 
-                
 
-                <!-- Post Comments -->
-                
-                    
-
-
-
-
-                
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="../../../../2017/01/04/six-Blog/">
+                    Mach-O加载流程
+                </a>
             </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="../../15/four-Blog/">
+                    OSX内核调试
+                </a>
+            </div>
+        
+    </nav>
 
-            <!-- Post Prev & Next Nav -->
-            <nav class="material-nav mdl-color-text--grey-50 mdl-cell mdl-cell--12-col">
-    <!-- Prev Nav -->
-    
-        <a href="/2017/01/04/six-Blog/" id="post_nav-newer" class="prev-content">
-            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
-                <i class="material-icons">arrow_back</i>
-            </button>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            新篇
-        </a>
-    
+  
+</article>
 
-    <!-- Section Spacer -->
-    <div class="section-spacer"></div>
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1分析源代码结构，并定位关键函数"><span class="toc-number">1.</span> <span class="toc-text">1.1分析源代码结构，并定位关键函数</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-1-首先使用dumpdecrypted砸壳"><span class="toc-number">1.1.</span> <span class="toc-text">1.1.1 首先使用dumpdecrypted砸壳</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-2-class-dump获取-h头文件"><span class="toc-number">1.2.</span> <span class="toc-text">1.1.2 class-dump获取.h头文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-3cycript打印视图层次"><span class="toc-number">1.3.</span> <span class="toc-text">1.1.3cycript打印视图层次</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-4-debugserver-lldb动态调试确认关键函数"><span class="toc-number">1.4.</span> <span class="toc-text">1.1.4 debugserver+lldb动态调试确认关键函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2编写tweak"><span class="toc-number">2.</span> <span class="toc-text">1.2编写tweak</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-0关于防护措施杂谈"><span class="toc-number">3.</span> <span class="toc-text">2.0关于防护措施杂谈</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
 
-    <!-- Next Nav -->
-    
-        <a href="/2016/12/15/four-Blog/" id="post_nav-older" class="next-content">
-            旧篇
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-color--white mdl-color-text--grey-900" role="presentation">
-                <i class="material-icons">arrow_forward</i>
-            </button>
-        </a>
-    
-</nav>
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
 
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
         </div>
-    </div>
-
-
-
-                    
-                        <!-- Overlay For Active Sidebar -->
-<div class="sidebar-overlay"></div>
-
-<!-- Material sidebar -->
-<aside id="sidebar" class="sidebar sidebar-colored sidebar-fixed-left" role="navigation">
-    <div id="sidebar-main">
-        <!-- Sidebar Header -->
-        <div class="sidebar-header header-cover" style="background-image: url(/img/sidebar_header.png);">
-    <!-- Top bar -->
-    <div class="top-bar"></div>
-
-    <!-- Sidebar toggle button -->
-    <button type="button" class="sidebar-toggle mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" style="display: initial;" data-upgraded=",MaterialButton,MaterialRipple">
-        <i class="material-icons">clear_all</i>
-        <span class="mdl-button__ripple-container">
-            <span class="mdl-ripple">
-            </span>
-        </span>
-    </button>
-
-    <!-- Sidebar Avatar -->
-    <div class="sidebar-image">
-        <img src="/img/avatar.png" alt="凌迟's avatar">
-    </div>
-
-    <!-- Sidebar Email -->
-    <a data-toggle="dropdown" class="sidebar-brand" href="#settings-dropdown">
-        hisherlock@icloud.com
-        <b class="caret"></b>
-    </a>
-</div>
-
-
-        <!-- Sidebar Navigation  -->
-        <ul class="nav sidebar-nav">
-    <!-- User dropdown  -->
-    <li class="dropdown">
-        <ul id="settings-dropdown" class="dropdown-menu">
-            
-                <li>
-                    <a href="#" target="_blank" title="Email Me">
-                        
-                            <i class="material-icons sidebar-material-icons sidebar-indent-left1pc-element">email</i>
-                        
-                        Email Me
-                    </a>
-                </li>
-            
-        </ul>
-    </li>
-
-    <!-- Homepage -->
-    
-        <li id="sidebar-first-li">
-            <a href="/" target="_self">
-                
-                    <i class="material-icons sidebar-material-icons">home</i>
-                
-                主页
-            </a>
-        </li>
-        
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"某记账App内购破解　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
     
 
-    <!-- Archives  -->
-    
-        <li class="dropdown">
-            <a href="#" class="ripple-effect dropdown-toggle" data-toggle="dropdown">
-                
-                    <i class="material-icons sidebar-material-icons">inbox</i>
-                
-                    归档
-                <b class="caret"></b>
-            </a>
-            <ul class="dropdown-menu">
-            <li>
-                <a class="sidebar_archives-link" href="../../../../archives/2017/02/">二月 2017<span class="sidebar_archives-count">1</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2017/01/">一月 2017<span class="sidebar_archives-count">1</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2016/12/">十二月 2016<span class="sidebar_archives-count">4</span></a></li><li><a class="sidebar_archives-link" href="../../../../archives/2016/11/">十一月 2016<span class="sidebar_archives-count">2</span></a>
-            </ul>
-        </li>
-        
-    
-
-    <!-- Categories  -->
-    
-
-    <!-- Pages  -->
-    
-        <li>
-            <a href="/about" title="关于我">
-                
-                    <i class="material-icons sidebar-material-icons">person</i>
-                
-                关于我
-            </a>
-        </li>
-        
-    
-
-    <!-- Article Number  -->
-    
-</ul>
-
-
-        <!-- Sidebar Footer -->
-        <!--
-I'm glad you use this theme, the development is no so easy, I hope you can keep the copyright, I will thank you so much.
-If you still want to delete the copyrights, could you still retain the first one? Which namely "Theme Material"
-It will not impact the appearance and can give developers a lot of support :)
-
-很高兴您使用并喜欢该主题，开发不易 十分谢谢与希望您可以保留一下版权声明。
-如果您仍然想删除的话 能否只保留第一项呢？即 "Theme Material"
-它不会影响美观并可以给开发者很大的支持和动力。 :)
--->
-
-<!-- Sidebar Divider -->
-
-    <div class="sidebar-divider"></div>
-
-
-<!-- Theme Material -->
-
-
-<!-- Help & Support -->
-<!--
-
--->
-
-<!-- Feedback -->
-<!--
-
--->
-
-<!-- About Theme -->
-<!--
-
--->
-
-    </div>
-
-    <!-- Sidebar Image -->
-    
-
-</aside>
-
-                    
-
-                    
-                        <!-- Footer Top Button -->
-                        <div class="toTop-wrap">
-    <a href="#top" class="toTop">
-        <i class="material-icons footer_top-i">expand_less</i>
-    </a>
-</div>
-
-                    
-
-                    <!--Footer-->
-<footer class="mdl-mini-footer" id="bottom">
-    
-        <!-- Paradox Footer Left Section -->
-        <div class="mdl-mini-footer--left-section sns-list">
-    <!-- Twitter -->
-    
-
-    <!-- Facebook -->
-    
-
-    <!-- Google + -->
-    
-
-    <!-- Weibo -->
-    
-
-    <!-- Instagram -->
-    
-
-    <!-- Tumblr -->
-    
-
-    <!-- Github -->
-    
-        <a href="https://github.com/Hello-Sherlock" target="_blank">
-            <button class="mdl-mini-footer--social-btn social-btn" style="background-image: url(/img/footer/footer_ico-github.png);">
-                <span class="visuallyhidden">Github</span>
-            </button><!--
-     --></a>
-    
-
-    <!-- LinkedIn -->
-    
-
-    <!-- Zhihu -->
-    
-
-    <!-- Bilibili -->
-    
-
-    <!-- Telegram -->
     
 </div>
 
 
-        <!--Copyright-->
-        <div id="copyright">
-            Copyright&nbsp;©&nbsp;
-            <script type="text/javascript">
-                var fd = new Date();
-                document.write(fd.getFullYear());
-            </script>
-            &nbsp;Hello-Sherlock
-        </div>
 
-        <!-- Paradox Footer Right Section -->
 
-        <!--
-        I am glad you use this theme, the development is no so easy, I hope you can keep the copyright.
-        It will not impact the appearance and can give developers a lot of support :)
 
-        很高兴您使用该主题，开发不易，希望您可以保留一下版权声明。
-        它不会影响美观并可以给开发者很大的支持。 :)
-        -->
 
-        <div class="mdl-mini-footer--right-section">
-            <div>
-                <div class="footer-develop-div">Powered by <a href="https://hexo.io" target="_blank" class="footer-develop-a">Hexo</a></div>
-                <div class="footer-develop-div">Theme - <a href="https://github.com/viosey/hexo-theme-material" target="_blank" class="footer-develop-a">Material</a></div>
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="../../../../2017/01/04/six-Blog/" title="上一篇: Mach-O加载流程">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="../../15/four-Blog/" title="下一篇: OSX内核调试">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="../../../../2017/02/12/seven-BLOG/">浅谈Mach IPC</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2017/01/04/six-Blog/">Mach-O加载流程</a></li><li class="post-list-item"><a class="post-list-link" href="">某记账App内购破解</a></li><li class="post-list-item"><a class="post-list-link" href="../../15/four-Blog/">OSX内核调试</a></li><li class="post-list-item"><a class="post-list-link" href="../../06/three-Blog/">Mach-O文件格式</a></li><li class="post-list-item"><a class="post-list-link" href="../../01/two-Blog/">通过Debugserver&lldb来调试一个被加了ptrace反调试的app</a></li><li class="post-list-item"><a class="post-list-link" href="../../../11/24/one-Blog/">Introspy对iOS应用黑盒测试</a></li><li class="post-list-item"><a class="post-list-link" href="../../../11/24/hello-world/">第一篇博客</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2017 凌迟
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
             </div>
         </div>
-    
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
 </footer>
-
-
-                    <!-- Import File -->
-<script src="../../../../js/lazyload.min.js"></script>
-<script src="../../../../js/js.min.js"></script>
-<script src="../../../../js/nprogress.js"></script>
-
-<script type="text/javascript">
-    NProgress.configure({
-        showSpinner: true
-    });
-    NProgress.start();
-    $('#nprogress .bar').css({
-        'background': '#29d'
-    });
-    $('#nprogress .peg').css({
-        'box-shadow': '0 0 10px #29d, 0 0 15px #29d'
-    });
-    $('#nprogress .spinner-icon').css({
-        'border-top-color': '#29d',
-        'border-left-color': '#29d'
-    });
-    setTimeout(function() {
-        NProgress.done();
-        $('.fade').removeClass('out');
-    }, 800);
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- Swiftye -->
-
-
-<!-- Local Search-->
-
-
-<!-- Window Load-->
-<script>
-    $(window).load(function() {
-        // Post_Toc parent position fixed
-        $('.post-toc-wrap').parent('.mdl-menu__container').css('position', 'fixed');
-    });
-</script>
-
-<!-- MathJax Load-->
-
-
-                </main>
-            </div>
-        </body>
+    </div>
     
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+
+  {% if theme.canvas_nest %}
+<script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+{% endif %}
+
+</body>
 </html>
