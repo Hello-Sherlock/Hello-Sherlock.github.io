@@ -21,7 +21,7 @@
 <meta property="og:url" content="http://Hello-Sherlock.github.io/2017/02/12/seven-BLOG/index.html">
 <meta property="og:site_name" content="凌迟">
 <meta property="og:description" content="自从涉及到内核的知识，其中的一些东西有些抽象，如果单单看某个概念，可能会觉得有点一头雾水，那么最好的办法就是通过一个例子来了解这些东西都做了什么事">
-<meta property="og:updated_time" content="2017-03-20T00:34:42.000Z">
+<meta property="og:updated_time" content="2017-03-20T00:38:11.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="通过Cve-2016-1757浅谈Mach IPC">
 <meta name="twitter:description" content="自从涉及到内核的知识，其中的一些东西有些抽象，如果单单看某个概念，可能会觉得有点一头雾水，那么最好的办法就是通过一个例子来了解这些东西都做了什么事">
@@ -323,7 +323,7 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">kern_return_t</span> mach_vm_region</div><div class="line">(</div><div class="line">	<span class="keyword">vm_map_t</span> target_task,</div><div class="line">	<span class="keyword">mach_vm_address_t</span> *address,</div><div class="line">	<span class="keyword">mach_vm_size_t</span> *size,</div><div class="line">	<span class="keyword">vm_region_flavor_t</span> flavor,</div><div class="line">	<span class="keyword">vm_region_info_t</span> info,</div><div class="line">	<span class="keyword">mach_msg_type_number_t</span> *infoCnt,</div><div class="line">	<span class="keyword">mach_port_t</span> *object_name</div><div class="line">);</div><div class="line"><span class="keyword">kern_return_t</span> mach_vm_allocate</div><div class="line">(</div><div class="line">	<span class="keyword">vm_map_t</span> target,</div><div class="line">	<span class="keyword">mach_vm_address_t</span> *address,</div><div class="line">	<span class="keyword">mach_vm_size_t</span> size,</div><div class="line">	<span class="keyword">int</span> flags</div><div class="line">);</div><div class="line"><span class="keyword">kern_return_t</span> mach_vm_protect</div><div class="line">(</div><div class="line">	<span class="keyword">vm_map_t</span> target_task,</div><div class="line">	<span class="keyword">mach_vm_address_t</span> address,</div><div class="line">	<span class="keyword">mach_vm_size_t</span> size,</div><div class="line">	<span class="keyword">boolean_t</span> set_maximum,</div><div class="line">	<span class="keyword">vm_prot_t</span> new_protection</div><div class="line">);</div><div class="line"><span class="keyword">kern_return_t</span> mach_vm_read</div><div class="line">(</div><div class="line">	<span class="keyword">vm_map_t</span> target_task,</div><div class="line">	<span class="keyword">mach_vm_address_t</span> address,</div><div class="line">	<span class="keyword">mach_vm_size_t</span> size,</div><div class="line">	<span class="keyword">vm_offset_t</span> *data,</div><div class="line">	<span class="keyword">mach_msg_type_number_t</span> *dataCnt</div><div class="line">);</div><div class="line"><span class="keyword">kern_return_t</span> mach_vm_write</div><div class="line">(</div><div class="line">	<span class="keyword">vm_map_t</span> target_task,</div><div class="line">	<span class="keyword">mach_vm_address_t</span> address,</div><div class="line">	<span class="keyword">vm_offset_t</span> data,</div><div class="line">	<span class="keyword">mach_msg_type_number_t</span> dataCnt</div><div class="line">);</div><div class="line"><span class="keyword">kern_return_t</span> mach_vm_map</div><div class="line">(</div><div class="line">	<span class="keyword">vm_map_t</span> target_task,</div><div class="line">	<span class="keyword">mach_vm_address_t</span> *address,</div><div class="line">	<span class="keyword">mach_vm_size_t</span> size,</div><div class="line">	<span class="keyword">mach_vm_offset_t</span> mask,</div><div class="line">	<span class="keyword">int</span> flags,</div><div class="line">	<span class="keyword">mem_entry_name_port_t</span> object,</div><div class="line">	<span class="keyword">memory_object_offset_t</span> offset,</div><div class="line">	<span class="keyword">boolean_t</span> copy,</div><div class="line">	<span class="keyword">vm_prot_t</span> cur_protection,</div><div class="line">	<span class="keyword">vm_prot_t</span> max_protection,</div><div class="line">	<span class="keyword">vm_inherit_t</span> inheritance</div><div class="line">);</div></pre></td></tr></table></figure>
 <ul>
 <li><code>mach_vm_region</code><br>根据flavor，显示任务的虚拟映射在address出的虚拟内存区域的信息</li>
-<li>mach_vm_allocate<br>在map表示的虚拟内存中分配size个字节</li>
+<li><code>mach_vm_allocate</code><br>在map表示的虚拟内存中分配size个字节</li>
 <li><code>mach_vm_protect</code><br>将map表示的虚拟内存中从star到star+size范围的内存区域的保护级别设置为定义的最高级别</li>
 <li><code>mach_vm_read</code><br>从外部任务的内存中复制，从map表示的虚拟内存中的addr出读size到data中</li>
 <li><code>mach_vm_write</code><br>复制到外部任务的内存：将data复制到map表示的虚拟内存中的address处</li>
@@ -356,7 +356,7 @@
         <p><span>本文标题:</span><a href="">通过Cve-2016-1757浅谈Mach IPC</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
         <p><span>发布时间:</span>2017-02-12, 14:43:56</p>
-        <p><span>最后更新:</span>2017-03-20, 08:34:42</p>
+        <p><span>最后更新:</span>2017-03-20, 08:38:11</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="" title="通过Cve-2016-1757浅谈Mach IPC">http://Hello-Sherlock.github.io/2017/02/12/seven-BLOG/</a>
             <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/02/12/seven-BLOG/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -436,24 +436,19 @@
 
 
     
-      <div class="duoshuo" id="comments">
-    <div id="comment-box" ></div>
-    <div class="ds-thread" id="ds-thread" data-thread-key="2017/02/12/seven-BLOG/" data-title="通过Cve-2016-1757浅谈Mach IPC" data-url="http://Hello-Sherlock.github.io"></div>
+        <section class="youyan" id="comments">
     <script>
-        var duoshuoQuery = {short_name:"hello-sherlock"};
         var loadComment = function(){
             var d = document, s = d.createElement('script');
-            s.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-            s.async = true; s.charset = 'UTF-8';
+            s.src = 'http://v2.uyan.cc/code/uyan.js?uid=2128116';
             (d.head || d.body).appendChild(s);
         }
-
-        
     </script>
     
     <script> loadComment(); </script>
 
-</div>
+    <div id="uyan_frame"></div>
+</section>
     
 
 
