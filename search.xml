@@ -4,6 +4,151 @@
   
     
     <entry>
+      <title><![CDATA[Twe-Blog]]></title>
+      <url>http://Hello-Sherlock.github.io/2017/05/19/twe-Blog/</url>
+      <content type="html"></content>
+      
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Ele-Blog]]></title>
+      <url>http://Hello-Sherlock.github.io/2017/05/19/ele-Blog/</url>
+      <content type="html"></content>
+      
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Ten-Blog]]></title>
+      <url>http://Hello-Sherlock.github.io/2017/05/19/ten-Blog/</url>
+      <content type="html"></content>
+      
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[【翻译】macOS 10.12.2本地提权和XNU Port堆风水]]></title>
+      <url>http://Hello-Sherlock.github.io/2017/04/17/night-Blog/</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>这篇文章是蒸米大神在阿里聚安全发的一篇有关xnu堆风水的文章，由于只发了英文版，这里来翻译下，再加深一下这方面的知识^_^</p>
+</blockquote>
+<p>原文在这里<a href="https://jaq.alibaba.com/community/art/show?spm=a313e.7916646.24000001.19.eXT850&amp;articleid=781" target="_blank" rel="external">https://jaq.alibaba.com/community/art/show?spm=a313e.7916646.24000001.19.eXT850&amp;articleid=781</a></p>
+<h2 id="0x00-简介"><a href="#0x00-简介" class="headerlink" title="0x00 简介"></a>0x00 简介</h2><p>从yalu 10.2，我们可以学到很多新的漏洞利用技术，特别是XNU堆风水和绕过内核保护。 在本文中，我们将讨论XNU堆风水的技术细节，并通过该技术使macOS获得root权限。最后但并不是最重要的，漏洞源码可以从以下网址下载：<br><a href="https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher" target="_blank" rel="external">https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher</a></p>
+<h2 id="0x01-内核堆栈溢出"><a href="#0x01-内核堆栈溢出" class="headerlink" title="0x01 内核堆栈溢出"></a>0x01 内核堆栈溢出</h2><p>通过XNU堆风水在macOS 10.12中获得root权限，我们需要一个内核漏洞。在本文中，我们选择<code>mach_voucher</code>堆溢出作为例子，<code>Mach_voucher_extract_attr_recipe_trap()</code>是可以在沙箱内调用的Mach陷阱，这是在iOS 10和macOS 10.12中添加的新功能，但是他有一个可怕的缓冲区溢出漏洞。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/d71rt073i56.png" alt="d71rt073i56.png"></p>
+<p>在函数中，<code>args-&gt;recipe_size</code>是一个指向整数的用户态指针，所以<code>mach_voucher_extract_attr_recipe_trap()</code>通过<code>copyin()</code>将size的值从用户态拷贝到内核， 然后赋值给sz.</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446in89rqbm0.png" alt="446in89rqbm0.png"></p>
+<p>该函数然后使用sz值在内核堆上分配一个内存块。但是，开发人员忘记了args-&gt; recipe_size是一个用户态指针，于是使它在<code>copyin()</code>中作为一个值， 我们知道用户态指针可能大于sz值，这将导致内核堆中的缓冲区溢出。</p>
+<p>需要注意的是，如果我们要在该地址上分配一个内存块，我们可能无法控制用户态指针的地址。但这不是问题。如果遇到未映射的内存，<code>copyin（）</code>函数会自动停止。 因此，我们可以在高地址上分配一个内存块，然后取消映射其余的内存块来控制溢出数据。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ina2jpor0.png" alt="446ina2jpor0.png"></p>
+<h2 id="0x02-通过port进行堆风水"><a href="#0x02-通过port进行堆风水" class="headerlink" title="0x02 通过port进行堆风水"></a>0x02 通过port进行堆风水</h2><p>在iOS 10和macOS 10.12中，苹果添加了一个新的缓解机制，以检查是否释放了错误的区域攻击，因此我们无法使用经典的<code>vm_map_copy</code>（更改<code>vm_map_size</code>）技术来执行堆风水。</p>
+<p>此外，苹果在iOS 9.2和macOS 10.11中添加了一个freelist随机化机制，我们不能轻易地预<br>测重新分配的内存块的位置。 为了解决这些问题，我们需要一个新的堆风水技术。</p>
+<p>在Yalu 10.2中，<code>qwertyoruiop</code>使用<code>OOL_PORTS</code>获取可用于执行任意内核内存读写的内核任务端口。 这种技术绕过了XNU堆中的所有缓解机制。在本节的其余部分，我们将讨论这种技术的细节。</p>
+<p><code>Mach msg</code>是XNU中最常用的IPC机制，大量消息通过“复杂的消息”发送。通过<code>MACH_MSG_OOL_PORTS_DESCRIPTOR</code>这种<code>msg_type</code>的“复杂消息”，我们可以向内核发送out-of-line端口。例如，我们发送了32个<code>MACH_PORT_DEAD</code> ool端口（32 * 8字节=0x100字节）到内核的kalloc.256区域。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/42423423.png" alt="42423423.png"></p>
+<p>保存在mach msg中的ool端口是<code>ipc_object</code>指针，指针可以指向用户态地址。 因此，我们可以使用<code>mach_voucher</code>漏洞来溢出这些指针，并在用户态下修改一个<code>ipc_object</code>指针用来指向一个伪造的<code>ipc_object</code>。 另外，我们也可以在用户态伪造的fake port下创建一个fake task。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/31231313.png" alt="31231313.png"></p>
+<p>为了保证溢出正确的<code>ipc_object</code>指针，我们需要做一些堆风水。 首先，我们向内核发送大量的ool端口消息，以确保新分配的内存块是连续的。 然后我们在中间收到一些消息来挖掘一些槽。 然后我们再次发送一些消息，使溢出点在槽的中间。 最后，我们使用<code>mach_voucher</code>在溢出点触发堆溢出。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ip2ru4i90.png" alt="446ip2ru4i90.png"></p>
+<p>溢出之后，我们可以收到其他mach消息，以找到损坏的端口（不是<code>MACH_PORT_DEAD</code>端口）。<br><img src="http://oh5mz2415.bkt.clouddn.com/446ip41tfpa0.png" alt="446ip41tfpa0.png"></p>
+<h2 id="0x03-内核内存任意读写"><a href="#0x03-内核内存任意读写" class="headerlink" title="0x03 内核内存任意读写"></a>0x03 内核内存任意读写</h2><p>首先，我们将伪造的<code>ipc_object</code>的<code>io_bits</code>设置为<code>IKOT_CLOCK</code>。所以我们可以使用<code>clock_sleep_trap（）</code>遍历内核来获取内核中<code>clock_task</code>的地址。 这个地址将帮助我们稍后找到内核数据。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipedl1v50.png" alt="446ipedl1v50.png"></p>
+<p>然后我们将伪造的<code>ipc_object</code>的<code>io_bits</code>设置为<code>IKOT_TASK</code>，将fakeport的task指向伪造的faketask。 通过将值设置为faketask + 0x380（在arm64中为0x360），我们可以通过<code>pid_for_task（）</code>读取任意32位内核内存。 这是令人吃惊的，因为该函数不检查task的有效性，只返回<em>（</em>（faketask + 0x380）+ 0x10）的值。 所以我们可以在没有任何小工具和ROP的情况下获得可靠性内核读取。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipg2vp590.png" alt="446ipg2vp590.png"><br><img src="http://oh5mz2415.bkt.clouddn.com/446iph1n7mf0.png" alt="446iph1n7mf0.png"></p>
+<p>通过<code>clock task</code>泄露的内核地址，我们可以在内存中搜索内核镜像的魔数，找到kslide。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipi9j31o0.png" alt="446ipi9j31o0.png"></p>
+<p>获取内核基础后，我们可以遍历所有进程来查找内核<code>ipc_object</code>和内核任务。然后我们可以<code>dump</code>出来内核的<code>ipc_object</code>以及内核进程的task数据并赋值给fake port。通过对我们的伪造的<code>ipc_object</code>和task使用<code>task_get_special_port（）</code>，我们可以获得内核任务端口。值得注意的是，内核任务端口非常强大。它可以用于通过<code>mach_vm_read（</code>）和<code>mach_vm_write（）</code>进行任意内核内存读写。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipjo49820.png" alt="446ipjo49820.png"></p>
+<h2 id="0x04-root提权"><a href="#0x04-root提权" class="headerlink" title="0x04 root提权"></a>0x04 root提权</h2><p>每个进程的凭据信息，<code>posix_cred</code>结构存储在内核内存中。我们首先需要找到我们的进程信息（从内核base + allproc），然后找到我们的exploit进程的<code>posix_cred</code>结构数据。 之后，我们通过<code>kernel_task_port</code>使用<code>mach_vm_write（</code>）将<code>cr_ruid</code>（实际用户ID）值设置为0（这意味着将进程的uid变成了root）。最后但并不是最重要的是，我们可以使用system（“/ bin / bash”）获取根shell！</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipm366tr0.png" alt="446ipm366tr0.png"></p>
+<h2 id="0x05-摘要"><a href="#0x05-摘要" class="headerlink" title="0x05 摘要"></a>0x05 摘要</h2><p>在本文中，我们介绍了如何使用<code>mach_voucher</code>堆溢出和堆风水来实现macOS 10.12.2上的本地提权。漏洞源码可以从以下网址下载：</p>
+<p><a href="https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher" target="_blank" rel="external">https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher</a></p>
+<h2 id="0x06-参考"><a href="#0x06-参考" class="headerlink" title="0x06 参考"></a>0x06 参考</h2><ol>
+<li>Yalu 102: <a href="https://github.com/kpwn/yalu102" target="_blank" rel="external">https://github.com/kpwn/yalu102</a></li>
+<li><a href="https://bugs.chromium.org/p/project-zero/issues/detail?id=1004" target="_blank" rel="external">https://bugs.chromium.org/p/project-zero/issues/detail?id=1004</a></li>
+</ol>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> XNU </tag>
+            
+            <tag> macOS </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[常见的iOS应用安全检测(整理)]]></title>
+      <url>http://Hello-Sherlock.github.io/2017/03/22/eight-Blog/</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>对应用的安全性防护有越狱检测、注入检测、调试检测，函数名替换、代码逻辑混淆等，那么对于安全研究人员来说，没有严格意义上的防爆死守，只要是应用，他就会有被攻击的点，那么为了有效地、一定程度上地对应用被逆向分析破解造成一些困扰，最好是<del>做全套</del>，那么这篇文章简单的记录一些常见的越狱、注入等的检测以及一些很常见的anti反调试</p>
+</blockquote>
+<a id="more"></a>
+<h1 id="越狱检测"><a href="#越狱检测" class="headerlink" title="越狱检测"></a>越狱检测</h1><h2 id="0x0-dyld-image-count-amp-amp-dyld-get-image-name"><a href="#0x0-dyld-image-count-amp-amp-dyld-get-image-name" class="headerlink" title="0x0 _dyld_image_count&amp;&amp;_dyld_get_image_name"></a>0x0 <code>_dyld_image_count</code>&amp;&amp;<code>_dyld_get_image_name</code></h2><p><code>- _dyld_image_count</code>返回dyld映射的当前的image数<br><code>- _dyld_get_image_name</code>返回image名称，可以通过它来检索dyld的image名称</p>
+<p>可以通过检测目录中是否有MobileSubstrate.dylib来确认是否越狱</p>
+<pre><code>void dylibCheck() {
+uint32_t count = _dyld_image_count();
+char *substrate = &quot;/Library/MobileSubstrate/MobileSubstrate.dylib&quot;;
+for(uint32_t i = 0; i &lt; count; i++) {
+const char *dyld = _dyld_get_image_name(i);
+if (strcmp(dyld,substrate)==0) { 
+NSLog(@&quot;该设备已越狱&quot;); 
+        }
+    } 
+}
+</code></pre><h2 id="0x1-fork"><a href="#0x1-fork" class="headerlink" title="0x1  fork"></a>0x1  fork</h2><p>fork()可以创建一个新的进程，由于在非越狱设备上不能够使用fork()系统调用，所以只能在越狱设备上使用</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> pid = fork();</div><div class="line"><span class="keyword">if</span>(pid&gt;=<span class="number">0</span>) &#123; NSLog(@”Jailbroken”); &#125;</div></pre></td></tr></table></figure>
+<h2 id="0x2-URL-scheme"><a href="#0x2-URL-scheme" class="headerlink" title="0x2  URL scheme"></a>0x2  URL scheme</h2><p>大部分越狱设备都会安装Cydia，当安装Cydia时会在设备上注册一个URL scheme,所以有一种检测方案是从应用程序调用Cydia的URL scheme并检查是否返回成功。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[NSURL <span class="string">URLWithString:</span>@”<span class="string">cydia:</span><span class="comment">//package/com.example.package”]</span></div></pre></td></tr></table></figure>
+<h2 id="0x3-opendir"><a href="#0x3-opendir" class="headerlink" title="0x3 opendir()"></a>0x3 opendir()</h2><p>使用opendir()进行特定目录的访问， 并返回与之相关联的目录流，在GD框架运行<code>opendir(/dev)</code>可以判断是否可以访问/dev目录，以此判断设备是否越狱因为在非越狱设备上将返回NULL</p>
+<h2 id="0x4-stat-amp-amp-lstat"><a href="#0x4-stat-amp-amp-lstat" class="headerlink" title="0x4 stat() &amp;&amp; lstat()"></a>0x4 stat() &amp;&amp; lstat()</h2><p>stat() &amp;&amp; lstat()是两个系统调用函数，我们可以通过他们来判断是否安装了以下一部分常用越狱工具<br><figure class="highlight crystal"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">/<span class="keyword">private</span>/var/stash</div><div class="line">/<span class="keyword">private</span>/var/<span class="class"><span class="keyword">lib</span>/<span class="title">apt</span></span></div><div class="line">/<span class="keyword">private</span>/var/<span class="class"><span class="keyword">lib</span>/<span class="title">cydia</span></span></div><div class="line">/usr/libexec/cydia</div><div class="line">/Applications/Icy.app</div><div class="line">/bin/bash</div><div class="line">/<span class="keyword">private</span>/var/tmp/cydia.log</div><div class="line">/usr/libexec/sftp-server</div><div class="line">/Applications/Loader.app</div><div class="line">/Applications/Cydia.app</div><div class="line">/usr/sbin/sshd</div><div class="line"></div><div class="line">......</div></pre></td></tr></table></figure></p>
+<p>当然还有fopen和NSFileManager</p>
+<h2 id="0x5-Symbolic-Link"><a href="#0x5-Symbolic-Link" class="headerlink" title="0x5 Symbolic Link"></a>0x5 Symbolic Link</h2><p>通过Symbolic Link我们可以来检查一些特殊的链接从而判断是否被越狱</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">/Applications</div><div class="line"><span class="regexp">/var/</span>stash<span class="regexp">/Library/</span>Ringtones</div><div class="line"><span class="regexp">/var/</span>stash<span class="regexp">/usr/</span>include</div><div class="line"><span class="regexp">/var/</span>stash<span class="regexp">/Library/</span>Wallpaper</div><div class="line"><span class="regexp">/var/</span>stash<span class="regexp">/usr/</span>libexec</div><div class="line"><span class="regexp">/var/</span>stash<span class="regexp">/usr/</span>share</div><div class="line"><span class="regexp">/var/</span>stash<span class="regexp">/usr/</span>arm-apple-darwin9</div></pre></td></tr></table></figure>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">struct <span class="keyword">stat</span> <span class="keyword">s</span>;</div><div class="line"><span class="keyword">if</span> (<span class="keyword">lstat</span>(<span class="string">"/Applications"</span>, &amp;<span class="keyword">s</span>) != <span class="number">0</span>) &#123;</div><div class="line"><span class="keyword">if</span>(s.st_mode &amp; S_IFLNK) &#123; NSLog(@”Jailbroken”);</div><div class="line">&#125; &#125;</div></pre></td></tr></table></figure>
+<h1 id="动态检测"><a href="#动态检测" class="headerlink" title="动态检测"></a>动态检测</h1><blockquote>
+<p>动态调试是逆向工程和分析各种平台软件的常见方法，他可以允许攻击者控制和修改运行时的局部变量或者对目标函数进行跟踪调试以便达到自己的一些目的。<br>当然出于保护我们的应用程序给攻击者在一定程度上造成一些阻碍，我们有一些常规的手段来检测它们(ps:常规的一些检测如果懂原理的话当然很好绕过so攻与防可以互相进步🙄)</p>
+</blockquote>
+<h2 id="0x0-注入检测"><a href="#0x0-注入检测" class="headerlink" title="0x0 注入检测"></a>0x0 注入检测</h2><p>Mac可以通过<code>DYLD_INSERT_LIBRARIES</code>环境变量进行动态库的注入，通过设置可执行文件的<code>header</code>部分为<code>_RESTRICT,__restrict</code>，可以使dyld忽略<code>DYLD_INSERT_LIBRARIES</code>环境变量，从而达到反注入的要求<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> ( removedCount != <span class="number">0</span> ) &#123;</div><div class="line">		dyld::<span class="built_in">log</span>(<span class="string">"dyld: DYLD_ environment variables being ignored because "</span>);</div><div class="line">		<span class="keyword">switch</span> (sRestrictedReason) &#123;</div><div class="line">			<span class="keyword">case</span> restrictedNot:</div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			<span class="keyword">case</span> restrictedBySetGUid:</div><div class="line">				dyld::<span class="built_in">log</span>(<span class="string">"main executable (%s) is setuid or setgid\n"</span>, sExecPath);</div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			<span class="keyword">case</span> restrictedBySegment:</div><div class="line">				dyld::<span class="built_in">log</span>(<span class="string">"main executable (%s) has __RESTRICT/__restrict section\n"</span>, sExecPath);</div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			<span class="keyword">case</span> restrictedByEntitlements:</div><div class="line">				dyld::<span class="built_in">log</span>(<span class="string">"main executable (%s) is code signed with entitlements\n"</span>, sExecPath);</div><div class="line">				<span class="keyword">break</span>;</div><div class="line">		&#125;</div><div class="line">	&#125;</div></pre></td></tr></table></figure></p>
+<p>具体做法是在Xcode的<code>Other Linker Flags</code>添加<code>-Wl,-sectcreate,__RESTRICT,__restrict,/dev/null</code><br>，编译后的可执行文件中就可以看到<br><del>此处应有machoview的图</del></p>
+<h2 id="0x1-反动态调试"><a href="#0x1-反动态调试" class="headerlink" title="0x1 反动态调试"></a>0x1 反动态调试</h2><h3 id="0x1-1-ptrace"><a href="#0x1-1-ptrace" class="headerlink" title="0x1.1 ptrace"></a>0x1.1 ptrace</h3><blockquote>
+<p>ptrace也算是一个挺大众的手段了，他是一个系统调用，提供了一个父进程可以通过该机制观察和控制另一个进程的执行的机制，但在iOS中以另一种方法调用，可以阻止调试器对目标进程进行跟踪。</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*<span class="keyword">ptrace_ptr_t</span>)</span><span class="params">(<span class="keyword">int</span> _request, <span class="keyword">pid_t</span> _pid, <span class="keyword">caddr_t</span> _addr, <span class="keyword">int</span> _data)</span></span>;</div><div class="line"><span class="meta">#<span class="meta-keyword">if</span> !defined(PT_DENY_ATTACH) </span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_DENY_ATTACH 31 </span></div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></div><div class="line"></div><div class="line"><span class="keyword">void</span>* handle = dlopen(<span class="number">0</span>, RTLD_GLOBAL | RTLD_NOW); </div><div class="line"><span class="keyword">ptrace_ptr_t</span> ptrace_ptr = dlsym(handle, <span class="string">"ptrace"</span>); </div><div class="line">ptrace_ptr(PT_DENY_ATTACH, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</div><div class="line">dlclose(handle);</div></pre></td></tr></table></figure>
+<p><a href="http://stackoverflow.com/questions/29826028/ios-anti-piracy-in-swift" target="_blank" rel="external">这是在swift上的实现方式</a></p>
+<h3 id="0x1-2-sysctl"><a href="#0x1-2-sysctl" class="headerlink" title="0x1.2 sysctl"></a>0x1.2 sysctl</h3><blockquote>
+<p>sysctl提供了一些显示进程统计数据的变量，主要可以用来检索有关进程的信息，从而确定应用是否正在被调试，但不会阻止调试器附加到现有的进程</p>
+</blockquote>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">int mib[<span class="number">4</span>];</div><div class="line">struct kinfo_proc info;</div><div class="line">size_t info_size = sizeof(info); info.kp_proc.p_flag = <span class="number">0</span>;</div><div class="line">mib[<span class="number">0</span>] = CTL_KERN; mib[<span class="number">1</span>] = KERN_PROC; mib[<span class="number">2</span>] = KERN_PROC_PID; mib[<span class="number">3</span>] = getpid();</div><div class="line"><span class="keyword">if</span> (sysctl(mib, <span class="number">4</span>, &amp;info, &amp;info_size, NULL, <span class="number">0</span>) == -<span class="number">1</span>) &#123;</div><div class="line">perror(<span class="string">"perror sysctl"</span>); <span class="keyword">exit</span>(-<span class="number">1</span>);</div><div class="line">&#125;</div><div class="line">return ((info.kp_proc.p_flag &amp; P_TRACED) != <span class="number">0</span>);</div></pre></td></tr></table></figure>
+<h3 id="0x1-3-syscall"><a href="#0x1-3-syscall" class="headerlink" title="0x1.3 syscall"></a>0x1.3 syscall</h3><blockquote>
+<p>还有一种系统调用的ptrace，我们可以通过syscall(26,31,0,0)来调用ptrace</p>
+</blockquote>
+<h3 id="0x1-4-isatty"><a href="#0x1-4-isatty" class="headerlink" title="0x1.4 isatty"></a>0x1.4 isatty</h3><blockquote>
+<p>还有一种确定lldb是否附加的方法就是<a href="https://sourceware.org/gdb/onlinedocs/gdb/isatty.html" target="_blank" rel="external">isatty</a>，如果文件描述符附加到控制台，就返回1，否则返回0<br><figure class="highlight objectivec"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (isatty(<span class="number">1</span>)) &#123;</div><div class="line"><span class="built_in">NSLog</span>(<span class="string">@"Being Debugged isatty"</span>);</div><div class="line">&#125;<span class="keyword">else</span>&#123;</div><div class="line"><span class="built_in">NSLog</span>(<span class="string">@"isatty() bypassed"</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+</blockquote>
+<p>还有一种通过系统调用实现的方法就是ioctl<br><figure class="highlight objectivec"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (!ioctl(<span class="number">1</span>, TIOCGWINSZ)) &#123;</div><div class="line">     <span class="built_in">NSLog</span>(<span class="string">@"Being Debugged ioctl"</span>);</div><div class="line"> &#125; <span class="keyword">else</span> &#123;</div><div class="line">     <span class="built_in">NSLog</span>(<span class="string">@"ioctl bypassed"</span>);</div><div class="line"> &#125;</div></pre></td></tr></table></figure></p>
+<h3 id="0x1-5-task-get-exception-ports"><a href="#0x1-5-task-get-exception-ports" class="headerlink" title="0x1.5 task_get_exception_ports"></a>0x1.5 <code>task_get_exception_ports</code></h3><blockquote>
+<p><code>task_get_exception_ports</code>是一个在用户态可以使用的task API，可以查询task的异常端口，而mach的异常消息都会发送到异常端口，所以我们通过它来验证调试器是否设置了这样的端口</p>
+</blockquote>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ios_execp_info</span></span> &#123;</div><div class="line">exception_mask_t masks[EXC_TYPES_COUNT]; mach_port_t ports[EXC_TYPES_COUNT]; exception_behavior_t behaviors[EXC_TYPES_COUNT]; thread_state_flavor_t flavors[EXC_TYPES_COUNT]; mach_msg_type_number_t count;</div><div class="line">&#125;;</div><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ios_execp_info</span></span> *info = malloc(<span class="keyword">sizeof</span>(<span class="class"><span class="keyword">struct</span> <span class="title">ios_execp_info</span></span>));</div><div class="line">kern_return_t kr = task_get_exception_ports(mach_task_self(), EXC_MASK_ALL, info-&gt;masks, &amp;info-&gt;count, info- &gt;ports, info-&gt;behaviors, info-&gt;flavors);</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; info-&gt;count; i++) &#123;</div><div class="line"><span class="keyword">if</span> (info-&gt;ports[i] !=<span class="number">0</span> || info-&gt;flavors[i] == THREAD_STATE_NONE) &#123; NSLog(@<span class="string">"Being debugged... task_get_exception_ports"</span>);</div><div class="line">&#125;<span class="keyword">else</span>&#123;</div><div class="line">NSLog(@<span class="string">"task_get_exception_ports bypassed"</span>);</div><div class="line">&#125; </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> ptrace </tag>
+            
+            <tag> sysctl </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[通过Cve-2016-1757浅谈Mach IPC]]></title>
       <url>http://Hello-Sherlock.github.io/2017/02/12/seven-BLOG/</url>
       <content type="html"><![CDATA[<blockquote>
@@ -338,9 +483,9 @@
         
         <tags>
             
-            <tag> tools </tag>
-            
             <tag> ptrace </tag>
+            
+            <tag> tools </tag>
             
         </tags>
         

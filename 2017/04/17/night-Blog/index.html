@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="凌迟" />
+
+
+
+<meta name="description" content="这篇文章是蒸米大神在阿里聚安全发的一篇有关xnu堆风水的文章，由于只发了英文版，这里来翻译下，再加深一下这方面的知识^_^
+
+原文在这里https://jaq.alibaba.com/community/art/show?spm=a313e.7916646.24000001.19.eXT850&amp;amp;articleid=781
+0x00 简介从yalu 10.2，我们可以学到很多新的漏洞利用技">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【翻译】macOS 10.12.2本地提权和XNU Port堆风水">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2017/04/17/night-Blog/index.html">
+<meta property="og:site_name" content="凌迟">
+<meta property="og:description" content="这篇文章是蒸米大神在阿里聚安全发的一篇有关xnu堆风水的文章，由于只发了英文版，这里来翻译下，再加深一下这方面的知识^_^
+
+原文在这里https://jaq.alibaba.com/community/art/show?spm=a313e.7916646.24000001.19.eXT850&amp;amp;articleid=781
+0x00 简介从yalu 10.2，我们可以学到很多新的漏洞利用技">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/d71rt073i56.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446in89rqbm0.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ina2jpor0.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/42423423.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/31231313.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ip2ru4i90.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ip41tfpa0.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ipedl1v50.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ipg2vp590.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446iph1n7mf0.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ipi9j31o0.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ipjo49820.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/446ipm366tr0.png">
+<meta property="og:updated_time" content="2017-05-19T15:21:16.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【翻译】macOS 10.12.2本地提权和XNU Port堆风水">
+<meta name="twitter:description" content="这篇文章是蒸米大神在阿里聚安全发的一篇有关xnu堆风水的文章，由于只发了英文版，这里来翻译下，再加深一下这方面的知识^_^
+
+原文在这里https://jaq.alibaba.com/community/art/show?spm=a313e.7916646.24000001.19.eXT850&amp;amp;articleid=781
+0x00 简介从yalu 10.2，我们可以学到很多新的漏洞利用技">
+<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/d71rt073i56.png">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="凌迟" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="../../../../css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>【翻译】macOS 10.12.2本地提权和XNU Port堆风水 | 凌迟</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8f74892ee564e6b6c58c707f544c5d1c";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">凌迟</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">做好你自己</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="../../../../index.html">主页</a></li>
+                        
+                            <li><a href="../../../../archives/">所有文章</a></li>
+                        
+                            <li><a href="../../../../tags/">标签云</a></li>
+                        
+                            <li><a href="../../../../about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach/">Mach</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach-O/">Mach-O</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/OSX/">OSX</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/XNU/">XNU</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/dyld/">dyld</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/iOS/">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/macOS/">macOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/ptrace/">ptrace</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/sysctl/">sysctl</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/tools/">tools</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/随笔/">随笔</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">好久不见,SherlockHolmes</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">凌迟</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">凌迟</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">做好你自己</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="../../../../index.html">主页</a></li>
+                
+                    <li><a href="../../../../archives/">所有文章</a></li>
+                
+                    <li><a href="../../../../tags/">标签云</a></li>
+                
+                    <li><a href="../../../../about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-night-Blog" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="" class="article-date">
+      <time datetime="2017-04-17T15:16:21.000Z" itemprop="datePublished">2017-04-17</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【翻译】macOS 10.12.2本地提权和XNU Port堆风水
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../../../../tags/XNU/">XNU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../../../../tags/macOS/">macOS</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <blockquote>
+<p>这篇文章是蒸米大神在阿里聚安全发的一篇有关xnu堆风水的文章，由于只发了英文版，这里来翻译下，再加深一下这方面的知识^_^</p>
+</blockquote>
+<p>原文在这里<a href="https://jaq.alibaba.com/community/art/show?spm=a313e.7916646.24000001.19.eXT850&amp;articleid=781" target="_blank" rel="external">https://jaq.alibaba.com/community/art/show?spm=a313e.7916646.24000001.19.eXT850&amp;articleid=781</a></p>
+<h2 id="0x00-简介"><a href="#0x00-简介" class="headerlink" title="0x00 简介"></a>0x00 简介</h2><p>从yalu 10.2，我们可以学到很多新的漏洞利用技术，特别是XNU堆风水和绕过内核保护。 在本文中，我们将讨论XNU堆风水的技术细节，并通过该技术使macOS获得root权限。最后但并不是最重要的，漏洞源码可以从以下网址下载：<br><a href="https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher" target="_blank" rel="external">https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher</a></p>
+<h2 id="0x01-内核堆栈溢出"><a href="#0x01-内核堆栈溢出" class="headerlink" title="0x01 内核堆栈溢出"></a>0x01 内核堆栈溢出</h2><p>通过XNU堆风水在macOS 10.12中获得root权限，我们需要一个内核漏洞。在本文中，我们选择<code>mach_voucher</code>堆溢出作为例子，<code>Mach_voucher_extract_attr_recipe_trap()</code>是可以在沙箱内调用的Mach陷阱，这是在iOS 10和macOS 10.12中添加的新功能，但是他有一个可怕的缓冲区溢出漏洞。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/d71rt073i56.png" alt="d71rt073i56.png"></p>
+<p>在函数中，<code>args-&gt;recipe_size</code>是一个指向整数的用户态指针，所以<code>mach_voucher_extract_attr_recipe_trap()</code>通过<code>copyin()</code>将size的值从用户态拷贝到内核， 然后赋值给sz.</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446in89rqbm0.png" alt="446in89rqbm0.png"></p>
+<p>该函数然后使用sz值在内核堆上分配一个内存块。但是，开发人员忘记了args-&gt; recipe_size是一个用户态指针，于是使它在<code>copyin()</code>中作为一个值， 我们知道用户态指针可能大于sz值，这将导致内核堆中的缓冲区溢出。</p>
+<p>需要注意的是，如果我们要在该地址上分配一个内存块，我们可能无法控制用户态指针的地址。但这不是问题。如果遇到未映射的内存，<code>copyin（）</code>函数会自动停止。 因此，我们可以在高地址上分配一个内存块，然后取消映射其余的内存块来控制溢出数据。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ina2jpor0.png" alt="446ina2jpor0.png"></p>
+<h2 id="0x02-通过port进行堆风水"><a href="#0x02-通过port进行堆风水" class="headerlink" title="0x02 通过port进行堆风水"></a>0x02 通过port进行堆风水</h2><p>在iOS 10和macOS 10.12中，苹果添加了一个新的缓解机制，以检查是否释放了错误的区域攻击，因此我们无法使用经典的<code>vm_map_copy</code>（更改<code>vm_map_size</code>）技术来执行堆风水。</p>
+<p>此外，苹果在iOS 9.2和macOS 10.11中添加了一个freelist随机化机制，我们不能轻易地预<br>测重新分配的内存块的位置。 为了解决这些问题，我们需要一个新的堆风水技术。</p>
+<p>在Yalu 10.2中，<code>qwertyoruiop</code>使用<code>OOL_PORTS</code>获取可用于执行任意内核内存读写的内核任务端口。 这种技术绕过了XNU堆中的所有缓解机制。在本节的其余部分，我们将讨论这种技术的细节。</p>
+<p><code>Mach msg</code>是XNU中最常用的IPC机制，大量消息通过“复杂的消息”发送。通过<code>MACH_MSG_OOL_PORTS_DESCRIPTOR</code>这种<code>msg_type</code>的“复杂消息”，我们可以向内核发送out-of-line端口。例如，我们发送了32个<code>MACH_PORT_DEAD</code> ool端口（32 * 8字节=0x100字节）到内核的kalloc.256区域。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/42423423.png" alt="42423423.png"></p>
+<p>保存在mach msg中的ool端口是<code>ipc_object</code>指针，指针可以指向用户态地址。 因此，我们可以使用<code>mach_voucher</code>漏洞来溢出这些指针，并在用户态下修改一个<code>ipc_object</code>指针用来指向一个伪造的<code>ipc_object</code>。 另外，我们也可以在用户态伪造的fake port下创建一个fake task。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/31231313.png" alt="31231313.png"></p>
+<p>为了保证溢出正确的<code>ipc_object</code>指针，我们需要做一些堆风水。 首先，我们向内核发送大量的ool端口消息，以确保新分配的内存块是连续的。 然后我们在中间收到一些消息来挖掘一些槽。 然后我们再次发送一些消息，使溢出点在槽的中间。 最后，我们使用<code>mach_voucher</code>在溢出点触发堆溢出。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ip2ru4i90.png" alt="446ip2ru4i90.png"></p>
+<p>溢出之后，我们可以收到其他mach消息，以找到损坏的端口（不是<code>MACH_PORT_DEAD</code>端口）。<br><img src="http://oh5mz2415.bkt.clouddn.com/446ip41tfpa0.png" alt="446ip41tfpa0.png"></p>
+<h2 id="0x03-内核内存任意读写"><a href="#0x03-内核内存任意读写" class="headerlink" title="0x03 内核内存任意读写"></a>0x03 内核内存任意读写</h2><p>首先，我们将伪造的<code>ipc_object</code>的<code>io_bits</code>设置为<code>IKOT_CLOCK</code>。所以我们可以使用<code>clock_sleep_trap（）</code>遍历内核来获取内核中<code>clock_task</code>的地址。 这个地址将帮助我们稍后找到内核数据。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipedl1v50.png" alt="446ipedl1v50.png"></p>
+<p>然后我们将伪造的<code>ipc_object</code>的<code>io_bits</code>设置为<code>IKOT_TASK</code>，将fakeport的task指向伪造的faketask。 通过将值设置为faketask + 0x380（在arm64中为0x360），我们可以通过<code>pid_for_task（）</code>读取任意32位内核内存。 这是令人吃惊的，因为该函数不检查task的有效性，只返回<em>（</em>（faketask + 0x380）+ 0x10）的值。 所以我们可以在没有任何小工具和ROP的情况下获得可靠性内核读取。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipg2vp590.png" alt="446ipg2vp590.png"><br><img src="http://oh5mz2415.bkt.clouddn.com/446iph1n7mf0.png" alt="446iph1n7mf0.png"></p>
+<p>通过<code>clock task</code>泄露的内核地址，我们可以在内存中搜索内核镜像的魔数，找到kslide。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipi9j31o0.png" alt="446ipi9j31o0.png"></p>
+<p>获取内核基础后，我们可以遍历所有进程来查找内核<code>ipc_object</code>和内核任务。然后我们可以<code>dump</code>出来内核的<code>ipc_object</code>以及内核进程的task数据并赋值给fake port。通过对我们的伪造的<code>ipc_object</code>和task使用<code>task_get_special_port（）</code>，我们可以获得内核任务端口。值得注意的是，内核任务端口非常强大。它可以用于通过<code>mach_vm_read（</code>）和<code>mach_vm_write（）</code>进行任意内核内存读写。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipjo49820.png" alt="446ipjo49820.png"></p>
+<h2 id="0x04-root提权"><a href="#0x04-root提权" class="headerlink" title="0x04 root提权"></a>0x04 root提权</h2><p>每个进程的凭据信息，<code>posix_cred</code>结构存储在内核内存中。我们首先需要找到我们的进程信息（从内核base + allproc），然后找到我们的exploit进程的<code>posix_cred</code>结构数据。 之后，我们通过<code>kernel_task_port</code>使用<code>mach_vm_write（</code>）将<code>cr_ruid</code>（实际用户ID）值设置为0（这意味着将进程的uid变成了root）。最后但并不是最重要的是，我们可以使用system（“/ bin / bash”）获取根shell！</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/446ipm366tr0.png" alt="446ipm366tr0.png"></p>
+<h2 id="0x05-摘要"><a href="#0x05-摘要" class="headerlink" title="0x05 摘要"></a>0x05 摘要</h2><p>在本文中，我们介绍了如何使用<code>mach_voucher</code>堆溢出和堆风水来实现macOS 10.12.2上的本地提权。漏洞源码可以从以下网址下载：</p>
+<p><a href="https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher" target="_blank" rel="external">https://github.com/zhengmin1989/macOS-10.12.2-Exp-via-mach_voucher</a></p>
+<h2 id="0x06-参考"><a href="#0x06-参考" class="headerlink" title="0x06 参考"></a>0x06 参考</h2><ol>
+<li>Yalu 102: <a href="https://github.com/kpwn/yalu102" target="_blank" rel="external">https://github.com/kpwn/yalu102</a></li>
+<li><a href="https://bugs.chromium.org/p/project-zero/issues/detail?id=1004" target="_blank" rel="external">https://bugs.chromium.org/p/project-zero/issues/detail?id=1004</a></li>
+</ol>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="">【翻译】macOS 10.12.2本地提权和XNU Port堆风水</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
+        <p><span>发布时间:</span>2017-04-17, 23:16:21</p>
+        <p><span>最后更新:</span>2017-05-19, 23:21:16</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="" title="【翻译】macOS 10.12.2本地提权和XNU Port堆风水">http://Hello-Sherlock.github.io/2017/04/17/night-Blog/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/04/17/night-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="../../../05/19/ten-Blog/">
+                    Ten-Blog
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="../../../03/22/eight-Blog/">
+                    常见的iOS应用安全检测(整理)
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-简介"><span class="toc-number">1.</span> <span class="toc-text">0x00 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-内核堆栈溢出"><span class="toc-number">2.</span> <span class="toc-text">0x01 内核堆栈溢出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-通过port进行堆风水"><span class="toc-number">3.</span> <span class="toc-text">0x02 通过port进行堆风水</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-内核内存任意读写"><span class="toc-number">4.</span> <span class="toc-text">0x03 内核内存任意读写</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-root提权"><span class="toc-number">5.</span> <span class="toc-text">0x04 root提权</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-摘要"><span class="toc-number">6.</span> <span class="toc-text">0x05 摘要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x06-参考"><span class="toc-number">7.</span> <span class="toc-text">0x06 参考</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"【翻译】macOS 10.12.2本地提权和XNU Port堆风水　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section class="youyan" id="comments">
+    <script>
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = 'http://v2.uyan.cc/code/uyan.js?uid=2128116';
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+    <div id="uyan_frame"></div>
+</section>
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="../../../05/19/ten-Blog/" title="上一篇: Ten-Blog">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="../../../03/22/eight-Blog/" title="下一篇: 常见的iOS应用安全检测(整理)">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="../../../05/19/twe-Blog/">Twe-Blog</a></li><li class="post-list-item"><a class="post-list-link" href="../../../05/19/ele-Blog/">Ele-Blog</a></li><li class="post-list-item"><a class="post-list-link" href="../../../05/19/ten-Blog/">Ten-Blog</a></li><li class="post-list-item"><a class="post-list-link" href="">【翻译】macOS 10.12.2本地提权和XNU Port堆风水</a></li><li class="post-list-item"><a class="post-list-link" href="../../../03/22/eight-Blog/">常见的iOS应用安全检测(整理)</a></li><li class="post-list-item"><a class="post-list-link" href="../../../02/12/seven-BLOG/">通过Cve-2016-1757浅谈Mach IPC</a></li><li class="post-list-item"><a class="post-list-link" href="../../../01/04/six-Blog/">Mach-O加载流程</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/20/five-Blog/">某记账App内购破解</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/15/four-Blog/">OSX内核调试</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/06/three-Blog/">Mach-O文件格式</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/01/two-Blog/">通过Debugserver&lldb来调试一个被加了ptrace反调试的app</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/11/24/one-Blog/">Introspy对iOS应用黑盒测试</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/11/24/hello-world/">第一篇博客</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2017 凌迟
+            </div>
+            <div class="footer-right">
+                 Hello,SherlockHolmes <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "喂~" + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 嘻嘻~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
