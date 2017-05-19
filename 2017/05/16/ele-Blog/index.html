@@ -21,7 +21,7 @@
 <meta property="og:url" content="http://Hello-Sherlock.github.io/2017/05/16/ele-Blog/index.html">
 <meta property="og:site_name" content="凌迟">
 <meta property="og:description" content="上一篇博客我们简单了解了CVE-2016-7637，简单了解了mach ipc在通讯的过程中遇到的一些问题，这次我们来看有关mach ipc的第二个漏洞cve-2016-7644">
-<meta property="og:updated_time" content="2017-05-19T15:52:15.000Z">
+<meta property="og:updated_time" content="2017-05-19T15:58:11.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="浅析Mach_portal（2）— CVE-2016-7644">
 <meta name="twitter:description" content="上一篇博客我们简单了解了CVE-2016-7637，简单了解了mach ipc在通讯的过程中遇到的一些问题，这次我们来看有关mach ipc的第二个漏洞cve-2016-7644">
@@ -296,7 +296,7 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <p>上一篇博客我们简单了解了<a href="">CVE-2016-7637</a>，简单了解了mach ipc在通讯的过程中遇到的一些问题，这次我们来看有关mach ipc的第二个漏洞cve-2016-7644</p>
+        <p>上一篇博客我们简单了解了<a href="https://hello-sherlock.github.io/2017/05/15/ten-Blog/">CVE-2016-7637</a>，简单了解了mach ipc在通讯的过程中遇到的一些问题，这次我们来看有关mach ipc的第二个漏洞cve-2016-7644</p>
 <a id="more"></a>
 <h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h1><h2 id="同步机制"><a href="#同步机制" class="headerlink" title="同步机制"></a>同步机制</h2><p>前面几篇文章都介绍了Mach IPC的一些关于<code>message</code>的知识，实际上在Mach IPC中，不光有消息传递机制，还有一个<code>同步机制</code>，主要判定两个或者多个并发的操作如何访问共享的资源。</p>
 <p>Mach的同步机制中有4个对象，最基本的就是互斥体，当别人使用资源时可以排除其他人对这个资源的访问。但是有一个特殊的要求:硬件对互斥体的进行<code>原子操作</code>，就是即使硬件中断也不打断互斥体的操作。</p>
@@ -369,7 +369,7 @@
         <p><span>本文标题:</span><a href="">浅析Mach_portal（2）— CVE-2016-7644</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
         <p><span>发布时间:</span>2017-05-16, 23:16:37</p>
-        <p><span>最后更新:</span>2017-05-19, 23:52:15</p>
+        <p><span>最后更新:</span>2017-05-19, 23:58:11</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="" title="浅析Mach_portal（2）— CVE-2016-7644">http://Hello-Sherlock.github.io/2017/05/16/ele-Blog/</a>
             <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/05/16/ele-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>

@@ -42,7 +42,7 @@
     <entry>
       <title><![CDATA[浅析Mach_portal（2）— CVE-2016-7644]]></title>
       <url>http://Hello-Sherlock.github.io/2017/05/16/ele-Blog/</url>
-      <content type="html"><![CDATA[<p>上一篇博客我们简单了解了<a href="">CVE-2016-7637</a>，简单了解了mach ipc在通讯的过程中遇到的一些问题，这次我们来看有关mach ipc的第二个漏洞cve-2016-7644</p>
+      <content type="html"><![CDATA[<p>上一篇博客我们简单了解了<a href="https://hello-sherlock.github.io/2017/05/15/ten-Blog/">CVE-2016-7637</a>，简单了解了mach ipc在通讯的过程中遇到的一些问题，这次我们来看有关mach ipc的第二个漏洞cve-2016-7644</p>
 <a id="more"></a>
 <h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h1><h2 id="同步机制"><a href="#同步机制" class="headerlink" title="同步机制"></a>同步机制</h2><p>前面几篇文章都介绍了Mach IPC的一些关于<code>message</code>的知识，实际上在Mach IPC中，不光有消息传递机制，还有一个<code>同步机制</code>，主要判定两个或者多个并发的操作如何访问共享的资源。</p>
 <p>Mach的同步机制中有4个对象，最基本的就是互斥体，当别人使用资源时可以排除其他人对这个资源的访问。但是有一个特殊的要求:硬件对互斥体的进行<code>原子操作</code>，就是即使硬件中断也不打断互斥体的操作。</p>
