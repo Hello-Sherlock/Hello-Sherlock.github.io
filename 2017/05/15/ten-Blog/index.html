@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="凌迟" />
+
+
+
+<meta name="description" content="由于前一段时间的iOS 10.x 越狱又大放光芒，这次的主角mach_portal，主要是通过mach port的三个漏洞再加上luca添加了kpp绕过完成的越狱，刚好前一段时间粗略学习过mach ipc的一些东西，作为巩固，我们来一步步探究mach_portal…
+这次的被利用的三个mach_port的漏洞分别为CVE-2016-7637、CVE-2016-7644、CVE-2016-7661，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅析Mach_portal（1）— CVE-2016-7637">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2017/05/15/ten-Blog/index.html">
+<meta property="og:site_name" content="凌迟">
+<meta property="og:description" content="由于前一段时间的iOS 10.x 越狱又大放光芒，这次的主角mach_portal，主要是通过mach port的三个漏洞再加上luca添加了kpp绕过完成的越狱，刚好前一段时间粗略学习过mach ipc的一些东西，作为巩固，我们来一步步探究mach_portal…
+这次的被利用的三个mach_port的漏洞分别为CVE-2016-7637、CVE-2016-7644、CVE-2016-7661，">
+<meta property="og:updated_time" content="2017-05-19T15:24:36.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅析Mach_portal（1）— CVE-2016-7637">
+<meta name="twitter:description" content="由于前一段时间的iOS 10.x 越狱又大放光芒，这次的主角mach_portal，主要是通过mach port的三个漏洞再加上luca添加了kpp绕过完成的越狱，刚好前一段时间粗略学习过mach ipc的一些东西，作为巩固，我们来一步步探究mach_portal…
+这次的被利用的三个mach_port的漏洞分别为CVE-2016-7637、CVE-2016-7644、CVE-2016-7661，">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="凌迟" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="../../../../css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>浅析Mach_portal（1）— CVE-2016-7637 | 凌迟</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?8f74892ee564e6b6c58c707f544c5d1c";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">凌迟</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">做好你自己</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="../../../../index.html">主页</a></li>
+                        
+                            <li><a href="../../../../archives/">所有文章</a></li>
+                        
+                            <li><a href="../../../../tags/">标签云</a></li>
+                        
+                            <li><a href="../../../../about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach/">Mach</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/Mach-O/">Mach-O</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/OSX/">OSX</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/XNU/">XNU</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/dyld/">dyld</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/iOS/">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/macOS/">macOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/mach-portal/">mach_portal</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/ptrace/">ptrace</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/sysctl/">sysctl</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/tools/">tools</a></li><li class="tag-list-item"><a class="tag-list-link" href="../../../../tags/随笔/">随笔</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">好久不见,SherlockHolmes</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">凌迟</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">凌迟</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">做好你自己</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="../../../../index.html">主页</a></li>
+                
+                    <li><a href="../../../../archives/">所有文章</a></li>
+                
+                    <li><a href="../../../../tags/">标签云</a></li>
+                
+                    <li><a href="../../../../about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-ten-Blog" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="" class="article-date">
+      <time datetime="2017-05-15T15:16:28.000Z" itemprop="datePublished">2017-05-15</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      浅析Mach_portal（1）— CVE-2016-7637
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../../../../tags/macOS/">macOS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../../../../tags/mach-portal/">mach_portal</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>由于前一段时间的iOS 10.x 越狱又大放光芒，这次的主角<code>mach_portal</code>，主要是通过<code>mach port</code>的三个漏洞再加上luca添加了kpp绕过完成的越狱，刚好前一段时间粗略学习过<code>mach ipc</code>的一些东西，作为巩固，我们来一步步探究<code>mach_portal</code>…</p>
+<p>这次的被利用的三个mach_port的漏洞分别为<code>CVE-2016-7637</code>、<code>CVE-2016-7644</code>、<code>CVE-2016-7661</code>，我们一个一个来看</p>
+<p>有关初探<code>mach ipc</code>的可以看<a href="https://hello-sherlock.github.io/2017/02/12/seven-BLOG/">这里</a></p>
+<a id="more"></a>
+<h1 id="CVE-2016-7637"><a href="#CVE-2016-7637" class="headerlink" title="CVE-2016-7637"></a>CVE-2016-7637</h1><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><h3 id="launchd"><a href="#launchd" class="headerlink" title="launchd"></a>launchd</h3><blockquote>
+<p>launchd是系统中第一个用户态进程，负责直接或间接的启动系统中的其他进程。他是由内核直接启动的</p>
+</blockquote>
+<h4 id="系统范围和用户范围的launch"><a href="#系统范围和用户范围的launch" class="headerlink" title="系统范围和用户范围的launch"></a>系统范围和用户范围的launch</h4><ol>
+<li><p>用户范围的launch是在用户登录的时候执行的，每通过ssh登录一个用户就会创建一个launch进程，但是在iOS中只有一个launch&gt;&gt;系统范围的launch。</p>
+</li>
+<li><p>系统范围的launch(PID 1)是系统上唯一一个不能被终止的进程，如果这个launch进程被杀死了，就会导致kernel panic ，。只有当系统关闭的时候，launch才是最后一个退出的进程。</p>
+</li>
+</ol>
+<p>launch的核心任务是根据预定的安排或实际的需要来加载其他的应用程序，launch分为两种不同的后台服务：</p>
+<ol>
+<li>Launch Daemon是系统级的后台服务，一般和用户没有交互，由系统自动启动 </li>
+<li>Launch Agent是Launch Daemon的一种，但Agent是用户级别的后台服务，只有在用户登录时才会启动，所以会和用户交互，甚至有的还有GUI。<br>ps:在iOS中只有 Launch Daemon</li>
+</ol>
+<h4 id="在iOS中有两个特殊的Launch-Daemon，SpringBoard和lockdownd。"><a href="#在iOS中有两个特殊的Launch-Daemon，SpringBoard和lockdownd。" class="headerlink" title="在iOS中有两个特殊的Launch Daemon，SpringBoard和lockdownd。"></a>在iOS中有两个特殊的Launch Daemon，SpringBoard和lockdownd。</h4><h5 id="springboard"><a href="#springboard" class="headerlink" title="springboard"></a>springboard</h5><p>由于iOS不需要登录系统，所以springboard是自启动，同时作为一个GUI shell提供了用户界面</p>
+<p>springboard在创建GUI的时候，会在/Applications和/var/mobile/Applications目录下寻找应用，读取每一个应用的Info.plist文件，找到CFBUndleIcons属性对应的应用程序图标并在设备上显示这些图标。</p>
+<h5 id="lockdownd"><a href="#lockdownd" class="headerlink" title="lockdownd"></a>lockdownd</h5><p>lockdownd和launch一样以root身份运行在其他进程之前。lockdownd由launch启动，负责设备激活、备份、奔溃报告、设备同步等，但又像一个小型的launch有着自己要启动的服务列表<br><figure class="highlight dts"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="params">&lt;key&gt;</span>com.apple.afc2<span class="params">&lt;/key&gt;</span></div><div class="line"><span class="params">&lt;dict&gt;</span></div><div class="line"><span class="params">&lt;key&gt;</span>AllowUnactivatedService<span class="params">&lt;/key&gt;</span> <span class="params">&lt;true /&gt;</span></div><div class="line"><span class="params">&lt;key&gt;</span>Label<span class="params">&lt;/key&gt;</span> </div><div class="line"><span class="params">&lt;string&gt;</span>com.apple.afc2<span class="params">&lt;/string&gt;</span> <span class="params">&lt;key&gt;</span>ProgramArguments<span class="params">&lt;/key&gt;</span> <span class="params">&lt;array&gt;</span></div><div class="line"><span class="params">&lt;string&gt;</span><span class="meta-keyword">/usr/</span>libexec/afcd<span class="params">&lt;/string&gt;</span> <span class="params">&lt;string&gt;</span>--lockdown<span class="params">&lt;/string&gt;</span> <span class="params">&lt;string&gt;</span>-d<span class="params">&lt;/string&gt;</span> <span class="params">&lt;string&gt;</span>/<span class="params">&lt;/string&gt;</span></div><div class="line"><span class="params">&lt;/array&gt;</span> </div><div class="line"><span class="params">&lt;/dict&gt;</span></div></pre></td></tr></table></figure></p>
+<h3 id="port"><a href="#port" class="headerlink" title="port"></a>port</h3><p>前文中我们已经讲过，<code>port</code>是<code>mach</code>中几乎所有其他对象实现的基础，消息在端口之间传递，并允许对消息进行各种操作，在消息的基础上又实现了<code>mach</code>内核的ipc</p>
+<p>我们首先看看port具体是怎样创建的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">kern_return_t</span></div><div class="line">ipc_port_alloc(</div><div class="line">	<span class="keyword">ipc_space_t</span>		space,</div><div class="line">	<span class="keyword">mach_port_name_t</span>	*namep,</div><div class="line">	<span class="keyword">ipc_port_t</span>		*portp)</div><div class="line">&#123;</div><div class="line">	<span class="keyword">ipc_port_t</span> port;</div><div class="line">	<span class="keyword">mach_port_name_t</span> name;</div><div class="line">	<span class="keyword">kern_return_t</span> kr;</div><div class="line"></div><div class="line"><span class="meta">#<span class="meta-keyword">if</span>     MACH_ASSERT</span></div><div class="line">	<span class="keyword">uintptr_t</span> buf[IP_CALLSTACK_MAX];</div><div class="line">	ipc_port_callstack_init_debug(&amp;buf[<span class="number">0</span>], IP_CALLSTACK_MAX);</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* MACH_ASSERT */</span></span></div><div class="line">	    </div><div class="line">	kr = ipc_object_alloc(space, IOT_PORT,</div><div class="line">			      MACH_PORT_TYPE_RECEIVE, <span class="number">0</span>,</div><div class="line">			      &amp;name, (<span class="keyword">ipc_object_t</span> *) &amp;port);</div><div class="line">	<span class="keyword">if</span> (kr != KERN_SUCCESS)</div><div class="line">		<span class="keyword">return</span> kr;</div><div class="line"></div><div class="line">	<span class="comment">/* port and space are locked */</span></div><div class="line">	ipc_port_init(port, space, name);</div><div class="line"></div><div class="line"><span class="meta">#<span class="meta-keyword">if</span>     MACH_ASSERT</span></div><div class="line">	ipc_port_init_debug(port, &amp;buf[<span class="number">0</span>], IP_CALLSTACK_MAX);</div><div class="line"><span class="meta">#<span class="meta-keyword">endif</span>  <span class="comment">/* MACH_ASSERT */</span></span></div><div class="line"></div><div class="line">	<span class="comment">/* unlock space after init */</span></div><div class="line">	is_write_unlock(space);</div><div class="line"></div><div class="line">	*namep = name;</div><div class="line">	*portp = port;</div><div class="line"></div><div class="line">	<span class="keyword">return</span> KERN_SUCCESS;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到在<code>ipc_port_alloc</code>中主要有两个变量port和name，在<code>ipc_port_init</code>初始化时则还有一个<code>space</code>，那么先看看这个space变量到底是做什么的呢，根据字面意思猜测<code>space</code>是一个ipc通讯中的独立的空间</p>
+<p>而<code>port</code>和<code>name</code>则是通过<code>ipc_object_alloc</code>获取的(ipc_object.c)</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">kern_return_t</div><div class="line">ipc_object_alloc(</div><div class="line">	ipc_space_t		space,</div><div class="line">	ipc_object_type_t	otype,</div><div class="line">	mach_port_type_t	<span class="class"><span class="keyword">type</span>,</span></div><div class="line">	mach_port_urefs_t	urefs,</div><div class="line">	mach_port_name_t	*namep,</div><div class="line">	ipc_object_t		*objectp)</div><div class="line">&#123;</div><div class="line">	ipc_object_t <span class="class"><span class="keyword">object</span></span>;</div><div class="line">	ipc_entry_t entry;</div><div class="line">	kern_return_t kr;</div><div class="line"></div><div class="line">	......</div><div class="line">	</div><div class="line">	<span class="comment">/* space is write-locked */</span></div><div class="line"></div><div class="line">	entry-&gt;ie_bits |= <span class="class"><span class="keyword">type</span> <span class="title">|</span> <span class="title">urefs</span></span>;</div><div class="line">	entry-&gt;ie_object = <span class="class"><span class="keyword">object</span></span>;</div><div class="line">	ipc_entry_modified(space, *namep, entry);</div><div class="line"></div><div class="line">	io_lock(<span class="class"><span class="keyword">object</span>)</span>;</div><div class="line"></div><div class="line">	<span class="class"><span class="keyword">object</span><span class="title">-&gt;io_references</span> </span>= <span class="number">1</span>; <span class="comment">/* for entry, not caller */</span></div><div class="line">	<span class="class"><span class="keyword">object</span><span class="title">-&gt;io_bits</span> </span>= io_makebits(<span class="type">TRUE</span>, otype, <span class="number">0</span>);</div><div class="line"></div><div class="line">	*objectp = <span class="class"><span class="keyword">object</span></span>;</div><div class="line">	<span class="keyword">return</span> <span class="type">KERN_SUCCESS</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在ipc_space.h我们看到有关<code>space</code>的数据结构</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> ipc_space &#123;</div><div class="line">	<span class="keyword">lck_spin_t</span>	is_lock_data;</div><div class="line">	<span class="keyword">ipc_space_refs_t</span> is_bits;	<span class="comment">/* holds refs, active, growing */</span></div><div class="line">	<span class="keyword">ipc_entry_num_t</span> is_table_size;	<span class="comment">/* current size of table */</span></div><div class="line">	<span class="keyword">ipc_entry_num_t</span> is_table_free;	<span class="comment">/* count of free elements */</span></div><div class="line">	<span class="keyword">ipc_entry_t</span> is_table;		<span class="comment">/* an array of entries */</span></div><div class="line">	<span class="keyword">task_t</span> is_task;                 <span class="comment">/* associated task */</span></div><div class="line">	<span class="keyword">struct</span> ipc_table_size *is_table_next; <span class="comment">/* info for larger table */</span></div><div class="line">	<span class="keyword">ipc_entry_num_t</span> is_low_mod;	<span class="comment">/* lowest modified entry during growth */</span></div><div class="line">	<span class="keyword">ipc_entry_num_t</span> is_high_mod;	<span class="comment">/* highest modified entry during growth */</span></div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>在<code>ipc_space.c</code>中我们可以看到创建一个<code>spcae</code>时有一个<code>table</code>，而这个<code>table</code>存放了<code>ipc port</code> 的内容并且这个<code>table</code>是由<code>ipc_entry_t</code>创建的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">kern_return_t</span></div><div class="line">ipc_space_create(</div><div class="line">	<span class="keyword">ipc_table_size_t</span>	initial,</div><div class="line">	<span class="keyword">ipc_space_t</span>		*spacep)</div><div class="line">&#123;</div><div class="line">	<span class="keyword">ipc_space_t</span> space;</div><div class="line">	<span class="keyword">ipc_entry_t</span> table;</div><div class="line">	<span class="keyword">ipc_entry_num_t</span> new_size;</div><div class="line">	<span class="keyword">mach_port_index_t</span> index;</div><div class="line"></div><div class="line">	space = is_alloc();</div><div class="line">	<span class="keyword">if</span> (space == IS_NULL)</div><div class="line">		<span class="keyword">return</span> KERN_RESOURCE_SHORTAGE;</div><div class="line"></div><div class="line">	table = it_entries_alloc(initial);</div><div class="line">	<span class="keyword">if</span> (table == IE_NULL) &#123;</div><div class="line">		is_free(space);</div><div class="line">		<span class="keyword">return</span> KERN_RESOURCE_SHORTAGE;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">......</div></pre></td></tr></table></figure>
+<p>再来看看<code>ipc_entry</code>的数据结构<br><figure class="highlight crystal"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ipc_entry</span> &#123;</span></div><div class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">ipc_object</span> *<span class="title">ie_object</span>;</span></div><div class="line">	ipc_entry_bits_t ie_bits;</div><div class="line">	mach_port_index_t ie_index;</div><div class="line">	<span class="class"><span class="keyword">union</span> &#123;</span></div><div class="line">		mach_port_index_t <span class="keyword">next</span>;		<span class="regexp">/* next in freelist, or...  */</span></div><div class="line">		ipc_table_index_t request;	<span class="regexp">/* dead name request notify */</span></div><div class="line">	&#125; index;</div><div class="line">&#125;;</div></pre></td></tr></table></figure></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">define</span>	IE_BITS_UREFS_MASK	0x0000ffff	<span class="comment">/* 16 bits of user-reference */</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span>	IE_BITS_UREFS(bits)	((bits) &amp; IE_BITS_UREFS_MASK)</span></div></pre></td></tr></table></figure>
+<p><code>ipc_entry</code>有一个指向<code>ipc_object</code>的<code>ie_bits</code>指针，<code>ie_bits</code>字段的低16位是<code>ipc_entry</code>的<code>uref</code>数量，最大值是0xFFFF</p>
+<p>当一个进程接收到一个“复杂消息”时，有一个<code>ipc_right_copyout</code>函数会复制当前端口的权限到<code>task</code>的<code>ipc_entry</code>的<code>table</code></p>
+<p>以下是<code>ipc_right_copyout</code>处理发送消息权限的代码<br><figure class="highlight coq"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (bits &amp; MACH_PORT_TYPE_SEND) &#123;</div><div class="line">			mach_port_urefs_t urefs = IE_BITS_UREFS(bits);</div><div class="line"></div><div class="line">			<span class="built_in">assert</span>(port-&gt;ip_srights &gt; <span class="number">1</span>);</div><div class="line">			<span class="built_in">assert</span>(urefs &gt; <span class="number">0</span>);</div><div class="line">			<span class="built_in">assert</span>(urefs &lt; MACH_PORT_UREFS_MAX);</div><div class="line"></div><div class="line">			<span class="keyword">if</span> (urefs+<span class="number">1</span> == MACH_PORT_UREFS_MAX) &#123;</div><div class="line">				<span class="keyword">if</span> (overflow) &#123;</div><div class="line">					/* leave urefs pegged to maximum */</div><div class="line"></div><div class="line">					port-&gt;ip_srights--;</div><div class="line">					ip_unlock(port);</div><div class="line">					ip_release(port);</div><div class="line">					<span class="keyword">return</span> KERN_SUCCESS;</div><div class="line">				&#125;</div><div class="line"></div><div class="line">				ip_unlock(port);</div><div class="line">				<span class="keyword">return</span> KERN_UREFS_OVERFLOW;</div><div class="line">			&#125;</div><div class="line">			port-&gt;ip_srights--;</div><div class="line">			ip_unlock(port);</div><div class="line">			ip_release(port);</div><div class="line">			</div><div class="line">			......</div><div class="line">			</div><div class="line">		entry-&gt;ie_bits = (bits | <span class="type">MACH_PORT_TYPE_SEND</span>) + <span class="number">1</span>;</div><div class="line">		ipc_entry_modified(space, name, entry);</div><div class="line">		break;</div><div class="line">		&#125;</div></pre></td></tr></table></figure></p>
+<p>以上代码中可以看出<code>uref</code>的值不会超过0xFFFE，在最下面的几行可以看到，对<code>uref</code>的数量没有限制，这样就容易造成溢出</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">case MACH_MSG_OOL_PORTS_DESCRIPTOR: &#123;</div><div class="line"> mach_port_t             		*ports<span class="comment">;</span></div><div class="line"> mach_msg_ool_ports_descriptor_t	*dsc<span class="comment">;</span></div><div class="line"> mach_msg_type_number_t   		<span class="keyword">j;</span></div><div class="line"></div><div class="line"> <span class="comment">/*</span></div><div class="line">  * Destroy port rights carried in the message </div><div class="line">  */</div><div class="line"> dsc = &amp;daddr-&gt;ool_ports<span class="comment">;</span></div><div class="line"> ports = (mach_port_t *) dsc-&gt;<span class="keyword">address;</span></div><div class="line"> for (<span class="keyword">j </span>= <span class="number">0</span><span class="comment">; j &lt; dsc-&gt;count; j++, ports++)  &#123;</span></div><div class="line">     mach_msg_destroy_port(*ports, dsc-&gt;<span class="keyword">disposition);</span></div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<h2 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h2><p>具体的利用，在<code>Ian Beer</code>提供的<a href="https://bugs.chromium.org/p/project-zero/issues/detail?id=959&amp;can=1&amp;q=apple&amp;sort=-id" target="_blank" rel="external">write up</a>中很详细了</p>
+<p>当进程收到某条含有OOL描述符的复杂消息时，这条消息由于不符合进程的接收标准被销毁时，<code>mach_msg_destroy_port</code>会释放所有的<code>port right</code>，而当每条这种复杂消息被销毁时，其中的<code>port right</code>都会被释放，进而会减少<code>uref</code>的值，当<code>uref</code>为0时，<code>ipc_entry</code>被释放到free list中并被标记为“空闲状态”，由此一来这个<code>ipc_entry</code>可以被用来指向另一个<code>ipc_object</code>。</p>
+<p>所以说，在’Ian Beer‘的write up中，主要是通过launch中的com.apple.CoreServices.coreservicesd服务，由于launch包含这个服务的发送权限，这样一来，可以</p>
+<ul>
+<li>先通过漏洞，释放这个port right，</li>
+<li>然后注册大量的虚拟服务，利用<em>类似于堆喷</em>的手段，使其中的某个服务代替了launch中的com.apple.CoreServices.coreservicesd服务，</li>
+<li>于是launch会把send right发向我们的虚拟服务，</li>
+<li>当有任何进程查找com.apple.CoreServices.coreservicesd时，就会把我们具有接收权限的端口发送给他</li>
+<li>然后我们就可以通过中间人，来监听任意进程与com.apple.CoreServices.coreservicesd的通信</li>
+<li>当我们发送一些root服务到内核中，并通过中间人监听其通信，就可以在launch中启动一个新的root权限的线程。</li>
+</ul>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="">浅析Mach_portal（1）— CVE-2016-7637</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
+        <p><span>发布时间:</span>2017-05-15, 23:16:28</p>
+        <p><span>最后更新:</span>2017-05-19, 23:24:36</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="" title="浅析Mach_portal（1）— CVE-2016-7637">http://Hello-Sherlock.github.io/2017/05/15/ten-Blog/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/05/15/ten-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="../../16/ele-Blog/">
+                    浅析Mach_portal（2）— CVE-2016-7644
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="../../../04/17/night-Blog/">
+                    【翻译】macOS 10.12.2本地提权和XNU Port堆风水
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#CVE-2016-7637"><span class="toc-number">1.</span> <span class="toc-text">CVE-2016-7637</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#基本概念"><span class="toc-number">1.1.</span> <span class="toc-text">基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#launchd"><span class="toc-number">1.1.1.</span> <span class="toc-text">launchd</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#系统范围和用户范围的launch"><span class="toc-number">1.1.1.1.</span> <span class="toc-text">系统范围和用户范围的launch</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#在iOS中有两个特殊的Launch-Daemon，SpringBoard和lockdownd。"><span class="toc-number">1.1.1.2.</span> <span class="toc-text">在iOS中有两个特殊的Launch Daemon，SpringBoard和lockdownd。</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#springboard"><span class="toc-number">1.1.1.2.1.</span> <span class="toc-text">springboard</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#lockdownd"><span class="toc-number">1.1.1.2.2.</span> <span class="toc-text">lockdownd</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#port"><span class="toc-number">1.1.2.</span> <span class="toc-text">port</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#漏洞利用"><span class="toc-number">1.2.</span> <span class="toc-text">漏洞利用</span></a></li></ol></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"浅析Mach_portal（1）— CVE-2016-7637　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section class="youyan" id="comments">
+    <script>
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = 'http://v2.uyan.cc/code/uyan.js?uid=2128116';
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+    <div id="uyan_frame"></div>
+</section>
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="../../16/ele-Blog/" title="上一篇: 浅析Mach_portal（2）— CVE-2016-7644">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="../../../04/17/night-Blog/" title="下一篇: 【翻译】macOS 10.12.2本地提权和XNU Port堆风水">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="../../18/twe-Blog/">浅析Mach_portal（3）— CVE-2016-7661</a></li><li class="post-list-item"><a class="post-list-link" href="../../16/ele-Blog/">浅析Mach_portal（2）— CVE-2016-7644</a></li><li class="post-list-item"><a class="post-list-link" href="">浅析Mach_portal（1）— CVE-2016-7637</a></li><li class="post-list-item"><a class="post-list-link" href="../../../04/17/night-Blog/">【翻译】macOS 10.12.2本地提权和XNU Port堆风水</a></li><li class="post-list-item"><a class="post-list-link" href="../../../03/22/eight-Blog/">常见的iOS应用安全检测(整理)</a></li><li class="post-list-item"><a class="post-list-link" href="../../../02/12/seven-BLOG/">通过Cve-2016-1757浅谈Mach IPC</a></li><li class="post-list-item"><a class="post-list-link" href="../../../01/04/six-Blog/">Mach-O加载流程</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/20/five-Blog/">某记账App内购破解</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/15/four-Blog/">OSX内核调试</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/06/three-Blog/">Mach-O文件格式</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/12/01/two-Blog/">通过Debugserver&lldb来调试一个被加了ptrace反调试的app</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/11/24/one-Blog/">Introspy对iOS应用黑盒测试</a></li><li class="post-list-item"><a class="post-list-link" href="../../../../2016/11/24/hello-world/">第一篇博客</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2017 凌迟
+            </div>
+            <div class="footer-right">
+                 Hello,SherlockHolmes <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "喂~" + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 嘻嘻~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
