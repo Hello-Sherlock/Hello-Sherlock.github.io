@@ -88,16 +88,6 @@
 
 
 
-    <script>
-        var _hmt = _hmt || [];
-        (function() {
-            var hm = document.createElement("script");
-            hm.src = "//hm.baidu.com/hm.js?8f74892ee564e6b6c58c707f544c5d1c";
-            var s = document.getElementsByTagName("script")[0]; 
-            s.parentNode.insertBefore(hm, s);
-        })();
-    </script>
-
 
 </head>
 <body>
@@ -203,7 +193,7 @@
                 
                 <section class="switch-part switch-part3">
                 
-                    <div id="js-aboutme">好久不见,SherlockHolmes</div>
+                    <div id="js-aboutme">好久不见,SherlockHolmes！</div>
                 </section>
                 
             </div>
@@ -415,10 +405,25 @@
             <div class="footer-right">
                  Hello,SherlockHolmes <i class="fa fa-heart animated infinite pulse"></i>
             </div>
-
-            <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
-            </script>
         </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
         
     </div>
 </footer>
@@ -478,11 +483,11 @@
         var titleTime;
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
-                document.title = "喂~" + originTitle;
+                document.title = "(つェ⊂) 🍊 " + originTitle;
                 clearTimeout(titleTime);
             }
             else {
-                document.title = "(*´∇｀*) 嘻嘻~ " + originTitle;
+                document.title = "(*´∇｀*) 🍉~ " + originTitle;
                 titleTime = setTimeout(function() {
                     document.title = originTitle;
                 }, 2000);
