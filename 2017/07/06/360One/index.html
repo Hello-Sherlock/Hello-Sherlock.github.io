@@ -15,33 +15,44 @@
 
 
 
-<meta name="description" content="这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉  逆向第三方应用好像是拆别人家东西自己用 逆向自身应用就像是给自己家添置家居">
-<meta name="keywords" content="iOS">
+<meta name="description" content="0x0前一段时间Windows上出现了WannaCry，造成了很大影响，在我们刚呼了口气时，Mac平台也’不甘示弱’地出现了首款勒索比特币的恶意软件—macRansom。 这个勒索软件在6.9日就被FortiGuard实验室发现并给出详细介绍，本文主要记录自己的分析流程">
+<meta name="keywords" content="Ransomware,macOS">
 <meta property="og:type" content="article">
-<meta property="og:title" content="关于短信拦截插件SMSAnti的实现">
-<meta property="og:url" content="http://Hello-Sherlock.github.io/2017/05/22/thi-Blog/index.html">
+<meta property="og:title" content="浅谈macRansom">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2017/07/06/360One/index.html">
 <meta property="og:site_name" content="凌迟">
-<meta property="og:description" content="这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉  逆向第三方应用好像是拆别人家东西自己用 逆向自身应用就像是给自己家添置家居">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020708@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020844@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-202705@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021158@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185651@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-192027@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185946@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190810@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190747@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021322@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021738@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021751@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021816@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021848@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021859@2x.jpg">
-<meta property="og:updated_time" content="2017-05-22T07:31:10.000Z">
+<meta property="og:description" content="0x0前一段时间Windows上出现了WannaCry，造成了很大影响，在我们刚呼了口气时，Mac平台也’不甘示弱’地出现了首款勒索比特币的恶意软件—macRansom。 这个勒索软件在6.9日就被FortiGuard实验室发现并给出详细介绍，本文主要记录自己的分析流程">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170628-182541@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170627-151335@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160255@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170628-165605@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160341@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170628-164513@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160507@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160531@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160541@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160550@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160601@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160612@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160623@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160634@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160644@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160816@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160828@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160838@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160850@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160859@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160905@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160913@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160921@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160929@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160938@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160946@2x.png">
+<meta property="og:updated_time" content="2017-07-06T08:43:47.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="关于短信拦截插件SMSAnti的实现">
-<meta name="twitter:description" content="这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉  逆向第三方应用好像是拆别人家东西自己用 逆向自身应用就像是给自己家添置家居">
-<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020708@2x.jpg">
+<meta name="twitter:title" content="浅谈macRansom">
+<meta name="twitter:description" content="0x0前一段时间Windows上出现了WannaCry，造成了很大影响，在我们刚呼了口气时，Mac平台也’不甘示弱’地出现了首款勒索比特币的恶意软件—macRansom。 这个勒索软件在6.9日就被FortiGuard实验室发现并给出详细介绍，本文主要记录自己的分析流程">
+<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170628-182541@2x.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -73,7 +84,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>关于短信拦截插件SMSAnti的实现 | 凌迟</title>
+<title>浅谈macRansom | 凌迟</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -263,11 +274,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap"><article id="post-thi-Blog" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-360One" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2017/05/22/thi-Blog/" class="article-date">
-      <time datetime="2017-05-22T07:15:38.000Z" itemprop="datePublished">2017-05-22</time>
+      <a href="/2017/07/06/360One/" class="article-date">
+      <time datetime="2017-07-06T08:39:54.000Z" itemprop="datePublished">2017-07-06</time>
 </a>
 
 
@@ -282,7 +293,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      关于短信拦截插件SMSAnti的实现
+      浅谈macRansom
     </h1>
   
 
@@ -293,7 +304,7 @@
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Ransomware/">Ransomware</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/macOS/">macOS</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -303,57 +314,58 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <blockquote>
-<p>这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉</p>
-<ol>
-<li>逆向第三方应用好像是拆别人家东西自己用</li>
-<li>逆向自身应用就像是给自己家添置家居</li>
-</ol>
-</blockquote>
+        <h2 id="0x0"><a href="#0x0" class="headerlink" title="0x0"></a>0x0</h2><p>前一段时间Windows上出现了WannaCry，造成了很大影响，在我们刚呼了口气时，Mac平台也’不甘示弱’地出现了首款勒索比特币的恶意软件—macRansom。</p>
+<p>这个勒索软件在6.9日就被FortiGuard实验室发现并给出详细介绍，本文主要记录自己的分析流程</p>
 <a id="more"></a>
-<p><a href="https://null-me.github.io" target="_blank" rel="external">@小学生</a>是我学习逆向的道路上的基友，我们经常一起折腾东西。有一天@小学生 对我讲说：咦小马哥，我们做个拦截短信的插件吧。就这样我们折腾了这个东西，现在讲下大概思路：</p>
-<blockquote>
-<p>随着网络欺诈的日益壮大，越来越多的人被钓鱼网站欺骗造成个人信息泄露严重的还会造成经济上的损失，这类欺诈短信大部分是以短信的形式发给你说中奖了或者说你的apple账户有风险，一旦你点进去，输入了你的账号和密码来登录，你的apple账户就成功泄露了，那么我们改如何着手去做一个拦截钓鱼网站的插件呢？</p>
-</blockquote>
-<p>首先说到短信，既然是苹果系统自带的app，肯定遵循MVC架构，既然想要拦截钓鱼网站，肯定是要把它与正确的网址作对比，然后再出来个弹框提示这个可能是钓鱼网站，并由用户选择是否继续或者进入正确的网址，这样，大概的思路流程也就出来了。</p>
-<p>接下来，我们打开短信接发消息的界面，先看看他的视图层次。</p>
-<ul>
-<li>首先打开<code>短信</code>，远程连接到手机，我们需要输入<code>ps -e | grep /Applications</code> 来找到目标app的进程名</li>
-<li>然后我们向<code>短信</code>注入Cycript来打印视图层次</li>
-</ul>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020708@2x.jpg" alt="QQ20170104-020708@2x"></p>
-<p><code>[[[UIWindow keyWindow] rootViewController] _printHierarchy].toString()</code><br>可以来打印一些大范围的层次，这样一来看起来更加精简。</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020844@2x.jpg" alt="QQ20170104-020844@2x"></p>
-<p>从打印出来的视图层次来看，我们所在收发消息界面的controller应该是CKMessagesController，其他的如：CKTranscriptCollectionViewController等都是苹果的私有框架，我们找到它后发现并没有找到一些关键信息</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-202705@2x.jpg" alt="QQ20170104-202705@2x"></p>
-<p>既然这样，我们先通过class-dump出他的头文件以备后续判断。<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021158@2x.jpg" alt="QQ20170104-021158"></p>
-<p>这时候，我们应该这样想，既然是要，点击这个链接后才执行判断以及警告，结合正向知识，应该是一个openURL之类的函数，我们把<code>短信</code>的二进制文件拖进hopper中，搜索openURL，结果看到有两个地方出现了分别是<code>-[SMSApplication applicationOpenURL:]:</code>和<code>-[SMSApplication openURL:]:</code></p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185651@2x.jpg" alt="QQ20170104-185651"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-192027@2x.jpg" alt="QQ20170104-192027"></p>
-<p>那么到底这两个中有没有我们所需呢？别着急，让我们祭起debugserver和lldb来印证猜想</p>
-<blockquote>
-<p>debugserver运行在iOS上，顾名思义，它作为服务端，实际执行LLDB（作为客户端）传过来的命令，再把执行结果反馈给LLDB<br>，显示给用户，即所谓的“远程调试”。</p>
-</blockquote>
-<p>首先<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185946@2x.jpg" alt="QQ20170104-185946"></p>
-<p>然后查看他的ASLR偏移<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190810@2x.jpg" alt="QQ20170104-190810"></p>
-<p>接下来我们结合之前的偏移量和函数的地址来下断点<br>首先在第一个地方下断点后，我们点击短信中的链接时没有任何反应，</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190747@2x.jpg" alt="QQ20170104-190747"></p>
-<p>然后我们在第二个地方下断点，结果在点击了链接后触发了断点，这是便初步印证了我们的猜想</p>
-<p>接下来我们在导出的头文件中找到SMSApplication.h文件，进去后找到一个具体的openURL函数，接下来就要着手写算法来判断是否为钓鱼网站了<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021322@2x.jpg" alt="QQ20170104-021322"></p>
-<p>这里我们通过分别遍历目标网址和正确网址的字符串，并计算相似度，如果相似度接近1或者过低就为正确网址，否则为钓鱼网址，然后我们在openURL中加上这个判断，再写上一个弹窗，出发点击事件，就可以完成我们的目标了。</p>
-<p><em>ps:在这里遇到一个正向开发的坑，之前的弹窗都是用UIAlerView，结果处理按钮点击事件的时候，arg1这个动态参数的值传不过来，请教了朋友之后才知道iOS8的新特性中使用UIAlertController，在UIAlertAction中通过block回调可以拿到这个动态参数</em></p>
-<p>最后我们编写完成tweak后注入到app中看看效果如何</p>
-<ul>
-<li><p>我们先在短信中输入<code>www.baudu.com</code>，然后点击它，会出现一个警告弹框<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021738@2x.jpg" alt="QQ20170104-021738"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021751@2x.jpg" alt="QQ20170104-021751"></p>
-</li>
-<li><p>如果我们点击<code>继续前往</code>，就会继续进入这个网站</p>
-</li>
-</ul>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021816@2x.jpg" alt="QQ20170104-021816"></p>
-<ul>
-<li>如果点击<code>正确网址</code>，就会进入<code>百度</code>这个正确的网站</li>
-</ul>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021848@2x.jpg" alt="QQ20170104-021848"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021859@2x.jpg" alt="QQ20170104-021859"></p>
-<p>这样我们最终就完成了这个拦截钓鱼网站的目标</p>
+<h2 id="0x1"><a href="#0x1" class="headerlink" title="0x1"></a>0x1</h2><p>首先在<a href="https://objective-see.com/blog/blog_0x1E.html" target="_blank" rel="external">这里</a>找到样本，下载后先在虚拟机运行看看，结果发现运行后没有任何反应</p>
+<p>既然这样，我们先通过lldb来看看能不能找到一些原因。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170628-182541@2x.png" alt="QQ20170628-182541@2x.png"></p>
+<p>结果发现 运行失败。按理说比较通用的反调试就是ptrace了，不过我们还是先在hopper中看一看确认一下。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170627-151335@2x.png" alt="QQ20170627-151335@2x.png"></p>
+<p>从入口开始往下看，看看伪代码，图中标出来的东西有没有一丝熟悉？<code>0x1f</code>结合之前的有关ptrace的<code>PT_DENY_ATTACH 31</code>，我们可以确定作者使用了ptrace。那这样的话就好办了我们直接修改汇编把<code>0x1F</code>修改为<code>0xa</code>，保存成新的可执行文件后再到虚拟机中看一看</p>
+<p>这次我们通过lldb连接macRansom后，r一下，可以看到进程又终止了，说明还有别的检测姿势。没关系，我们继续从hopper中寻求答案！</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160255@2x.png" alt="QQ20170629"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170628-165605@2x.png" alt="QQ20170628-165605@2x.png"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160341@2x.png" alt="http://oh5mz2415.bkt.clouddn.com/QQ20170628-165541@2x.png"></p>
+<p>在hopper中我们看到有两处<code>jne loc_100001b05</code>，再来看看处理逻辑，我们会发现这里应该是有两处地方做出了某种检测导致进程加载失败。我们继续在lldb中，通过<code>ni</code>指令，一直到函数跳转之前，通过读取内存看看究竟有什么问题</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170628-164513@2x.png" alt="QQ20170628-164513@2x.png"></p>
+<p>如图，我们看到了这里主要加载了一条指令<code>sysctl hw.model</code>，百度了下这个<code>hw.model</code>主要是来获得目标的硬件信息</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160507@2x.png" alt="QQ20170628"></p>
+<p>那既然这样，我们应该看看下一部分检测了什么，但是要怎么做呢？难道我们又要<code>在hopper中修改，保存后生成新的可执行文件，继续lldb？？</code>，别急，看看反汇编，逻辑很清晰，我们只需要把rax的值改为0不就行了！</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160531@2x.png" alt="QQ20170628"></p>
+<p>继续，我们在下一个跳转处通过<code>x/s $rdi</code>，可以看到<code>sysctl -n hw.logicalcpu/sysctl -n physicalcpu</code>，这个主要就是检测你系统中逻辑cpu和物理cpu的个数了</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160541@2x.png" alt="QQ20170628"><br> 同样，我们通过之前的方法修改rax的值来绕过检测</p>
+<p>继续运行，按理说这时候应该运行成功了</p>
+<p>但是！这里还检测了系统时间，只有到了指定的时间才可以运行，否则它就待在你的电脑中什么事情都不做，这也是这个勒索软件的隐蔽之处</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160550@2x.png" alt="QQ20170629"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160601@2x.png" alt="QQ20170630"></p>
+<p>既然是勒索软件，那么它肯定会加密你的文件，那关于如何加密等信息我们还是从hopper来入手吧。</p>
+<p>从函数入口往下看，一眼过去可以瞄到一个<code>sub_100001f30</code>，跳转到它的伪代码，大致浏览一遍，我们猜测这个函数应该是对勒索软件中的一些字符串做了加密</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160612@2x.png" alt="QQ20170703"></p>
+<p>代码逻辑比较简单，我们可以加载一个脚本，通过hopper来恢复它。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160623@2x.png" alt="QQ20170703"></p>
+<p>这里要说明一下，hopper是可以加载自己的脚本的，具体做法是把自己的脚本放在目录<code>~/Library/Application Support/Hopper/Scripts</code>中，然后等hopper加载完可执行文件之后，点击菜单栏的<code>scripts</code>，选择自己的脚本就可以加载了</p>
+<p>我们可以看到一些被加密的字符串显现了出来，这为我们更直观地分析它提供了很大的帮助</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160634@2x.png" alt="QQ20170703"></p>
+<p>继续往下看，我们可以看到，当它对系统中的文件进行加密时，是通过<code>find /Volumes ~ ! -path &quot;%s&quot; -type f -size +8c -user &#39;whoami&#39; -perm -u=r -exec</code>这条命令对大于8字节且权限为r的文件进行枚举。平常的勒索软件一般是通过遍历文件然后通过文件后缀来筛选出要加密的文件，这种直接来枚举的也是清新脱俗哇~</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160644@2x.png" alt="QQ20170703"></p>
+<p>整个加密的大概流程如图，其中的十六进制数我们大概可以猜得出是对称加密中初始化的一些值，既然这样，难道我们可以通过寻找密钥来进行解密？？？</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160816@2x.png" alt="QQ20170703"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160828@2x.png" alt="QQ20170706"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160838@2x.png" alt="QQ20170706"></p>
+<p>其实不然，在<code>sub_100002050</code>中的<code>arc4random()</code>我们能看得出，加密的密钥实际上是被随机化了，而且也没有找到任何与勒索者服务器对接的痕迹。</p>
+<p>照这样看来，即使最后交了钱，当了冤大头，自己的数据还是不会被解密。当然~暴力破解理论上是可以的，这要看你自己有多少精力了</p>
+<p>好，言归正传，接下来，等勒索软件正式运行的时候，我们打开活动监视器，可以看到已经有一个叫做<code>.FS_Store</code>的进程</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160850@2x.png" alt="QQ20170627"></p>
+<p>然后想想，既然他要在系统启动后开始运行加密的进程，而在macOS 中LaunchAgents用来实现开机自启动，所以我们在目录<code>~/Library/LaunchAgents</code>下看看，有一个<code>com.apple.finder</code>文件，打开后可以看到<code>pgrep -x .FS_Store&amp;&amp;~/Library/.FS_Store</code>，原来我们活动监视器中的那个可疑进程是这样存在的，它还把名字设为.开头的，以至于我们表面上看不到它<br> 。<br> <img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160859@2x.png" alt="QQ20170627"><br> <img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160905@2x.png" alt="QQ20170627"></p>
+<p>不出一会，随着进程数越来越多，我们虚拟机越来越卡，然后重新启动后发现我们虚拟机中的文件被加密出现了很多的md文件，并出现了我们“期待”已久的小窗口！</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160913@2x.png" alt="QQ20170627"><br> <img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160921@2x.png" alt="QQ20170627"></p>
+<p>至此，我们终于通过一些手段成功的运行并了解了这款恶意软件。</p>
+<p>然而，在成功加密文件后，之前的启动文件com.apple.finder.plist和macRansom binary则会被删除<br> <img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160929@2x.png" alt="QQ20170706"></p>
+<h2 id="0x2"><a href="#0x2" class="headerlink" title="0x2"></a>0x2</h2><p>关于在如何在hopper中一次性修改绕过所有的检查，其实也不难，回过头来看看汇编，我们只需要把两处<code>jne xxxxx</code>改成<code>nop</code>就可以了<br> <img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160938@2x.png" alt="QQ20170629"><br> 那么为了避免我们在真机上不小心运行了它(比如说我>_\\\&lt;)，幸好做了备份~这样也不至于造成多大的损失。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-160946@2x.png" alt="QQ20170706"></p>
+<h2 id="0x3"><a href="#0x3" class="headerlink" title="0x3"></a>0x3</h2><p>随着恶意软件的肆意流行，越来越多的人渐渐把目光放在了macOS上，总的来说这款软件相比于之前Windows上的WannaCry还是差了好多，但随着Mac用户数量日渐增长，我们终究会在macOS上遇到更危险的勒索软件，万一勒索软件们伪装的很好，稍有不慎还是会中招，最好的办法还是勤备份，比如iCloud备份就不错，可以实时同步，而且50G一个月只要6块。当然像Time Machine等等都是很不错的选择~</p>
+<h2 id="0x4"><a href="#0x4" class="headerlink" title="0x4"></a>0x4</h2><p>参考：</p>
+<p><a href="https://blog.fortinet.com/2017/06/09/macransom-offered-as-ransomware-as-a-service" target="_blank" rel="external">https://blog.fortinet.com/2017/06/09/macransom-offered-as-ransomware-as-a-service</a></p>
+<p><a href="https://objective-see.com/blog/blog_0x1E.html" target="_blank" rel="external">https://objective-see.com/blog/blog_0x1E.html</a></p>
 
       
     </div>
@@ -362,13 +374,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2017/05/22/thi-Blog/">关于短信拦截插件SMSAnti的实现</a></p>
+        <p><span>本文标题:</span><a href="/2017/07/06/360One/">浅谈macRansom</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
-        <p><span>发布时间:</span>2017-05-22, 15:15:38</p>
-        <p><span>最后更新:</span>2017-05-22, 15:31:10</p>
+        <p><span>发布时间:</span>2017-07-06, 16:39:54</p>
+        <p><span>最后更新:</span>2017-07-06, 16:43:47</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2017/05/22/thi-Blog/" title="关于短信拦截插件SMSAnti的实现">http://Hello-Sherlock.github.io/2017/05/22/thi-Blog/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/05/22/thi-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2017/07/06/360One/" title="浅谈macRansom">http://Hello-Sherlock.github.io/2017/07/06/360One/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/07/06/360One/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -380,16 +392,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2017/07/06/360One/">
-                    浅谈macRansom
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2017/05/18/twe-Blog/">
-                    浅析mach_portal（3）— CVE-2016-7661
+                <a href="/2017/05/22/thi-Blog/">
+                    关于短信拦截插件SMSAnti的实现
                 </a>
             </div>
         
@@ -401,7 +407,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x0"><span class="toc-number">1.</span> <span class="toc-text">0x0</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x1"><span class="toc-number">2.</span> <span class="toc-text">0x1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x2"><span class="toc-number">3.</span> <span class="toc-text">0x2</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x3"><span class="toc-number">4.</span> <span class="toc-text">0x3</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x4"><span class="toc-number">5.</span> <span class="toc-text">0x4</span></a></li></ol>
         
     </div>
     <style>
@@ -437,7 +443,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"关于短信拦截插件SMSAnti的实现　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"浅谈macRansom　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -466,15 +472,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2017/07/06/360One/" title="上一篇: 浅谈macRansom">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2017/05/18/twe-Blog/" title="下一篇: 浅析mach_portal（3）— CVE-2016-7661">
+            <a href="/2017/05/22/thi-Blog/" title="下一篇: 关于短信拦截插件SMSAnti的实现">
                 <i class="fa fa-angle-right"></i>
             </a>
         
