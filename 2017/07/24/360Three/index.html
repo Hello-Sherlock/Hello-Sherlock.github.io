@@ -15,33 +15,42 @@
 
 
 
-<meta name="description" content="这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉  逆向第三方应用好像是拆别人家东西自己用 逆向自身应用就像是给自己家添置家居">
-<meta name="keywords" content="iOS">
+<meta name="description" content="Handbrake是一个macOS上的视频转码器，结果他们的官网被黑客入侵后，换上了他们自己含有木马的应用，这让我不由的想起了去年三月的一个恶意软件——KeRanger，看来黑掉官网-&amp;gt;替换木马程序-&amp;gt;感染这条路也是让人防不胜防啊~该木马由今年5月中旬被Patrick分析，这里主要记录一下自己的分析学习的流程">
 <meta property="og:type" content="article">
-<meta property="og:title" content="关于短信拦截插件SMSAnti的实现">
-<meta property="og:url" content="http://Hello-Sherlock.github.io/2017/05/22/thi-Blog/index.html">
+<meta property="og:title" content="了解关于macOS上的恶意木马——OSX &#x2F; Proton.B">
+<meta property="og:url" content="http://Hello-Sherlock.github.io/2017/07/24/360Three/index.html">
 <meta property="og:site_name" content="凌迟">
-<meta property="og:description" content="这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉  逆向第三方应用好像是拆别人家东西自己用 逆向自身应用就像是给自己家添置家居">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020708@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020844@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-202705@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021158@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185651@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-192027@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185946@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190810@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190747@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021322@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021738@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021751@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021816@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021848@2x.jpg">
-<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021859@2x.jpg">
-<meta property="og:updated_time" content="2017-05-22T07:31:10.000Z">
+<meta property="og:description" content="Handbrake是一个macOS上的视频转码器，结果他们的官网被黑客入侵后，换上了他们自己含有木马的应用，这让我不由的想起了去年三月的一个恶意软件——KeRanger，看来黑掉官网-&amp;gt;替换木马程序-&amp;gt;感染这条路也是让人防不胜防啊~该木马由今年5月中旬被Patrick分析，这里主要记录一下自己的分析学习的流程">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-155059@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170720-224731@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170707-095637@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170707-095738@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170707-100104@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170707-103540@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170720-224921@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170710-222940@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-150458@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-143605@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170720-230146@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-110207@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170710-152322@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170710-152412@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170707-115307@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-164813@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-162325@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-162433@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-165101@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170711-165119@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170724-142059@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170724-142912@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170724-143447@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170724-145833@2x.png">
+<meta property="og:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170724-150551@2x.png">
+<meta property="og:updated_time" content="2017-07-24T08:37:38.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="关于短信拦截插件SMSAnti的实现">
-<meta name="twitter:description" content="这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉  逆向第三方应用好像是拆别人家东西自己用 逆向自身应用就像是给自己家添置家居">
-<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020708@2x.jpg">
+<meta name="twitter:title" content="了解关于macOS上的恶意木马——OSX &#x2F; Proton.B">
+<meta name="twitter:description" content="Handbrake是一个macOS上的视频转码器，结果他们的官网被黑客入侵后，换上了他们自己含有木马的应用，这让我不由的想起了去年三月的一个恶意软件——KeRanger，看来黑掉官网-&amp;gt;替换木马程序-&amp;gt;感染这条路也是让人防不胜防啊~该木马由今年5月中旬被Patrick分析，这里主要记录一下自己的分析学习的流程">
+<meta name="twitter:image" content="http://oh5mz2415.bkt.clouddn.com/QQ20170706-155059@2x.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -73,7 +82,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>关于短信拦截插件SMSAnti的实现 | 凌迟</title>
+<title>了解关于macOS上的恶意木马——OSX / Proton.B | 凌迟</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -263,11 +272,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap"><article id="post-thi-Blog" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-360Three" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2017/05/22/thi-Blog/" class="article-date">
-      <time datetime="2017-05-22T07:15:38.000Z" itemprop="datePublished">2017-05-22</time>
+      <a href="/2017/07/24/360Three/" class="article-date">
+      <time datetime="2017-07-24T08:35:02.000Z" itemprop="datePublished">2017-07-24</time>
 </a>
 
 
@@ -282,7 +291,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      关于短信拦截插件SMSAnti的实现
+      了解关于macOS上的恶意木马——OSX / Proton.B
     </h1>
   
 
@@ -292,10 +301,6 @@
         
 
         
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
-    </div>
-
         <div class="clearfix"></div>
       </div>
       
@@ -304,56 +309,71 @@
       
           
         <blockquote>
-<p>这篇文章是16年年底写的，一直忘记发，之前也都是分析第三方应用，对于自身应用和第三方应用有这样两种感觉</p>
-<ol>
-<li>逆向第三方应用好像是拆别人家东西自己用</li>
-<li>逆向自身应用就像是给自己家添置家居</li>
-</ol>
+<p>Handbrake是一个macOS上的视频转码器，结果他们的官网被黑客入侵后，换上了他们自己含有木马的应用，这让我不由的想起了去年三月的一个恶意软件——KeRanger，看来<code>黑掉官网-&gt;替换木马程序-&gt;感染</code>这条路也是让人防不胜防啊~<br>该木马由今年5月中旬被<a href="https://objective-see.com/blog/blog_0x1D.html" target="_blank" rel="external">Patrick</a>分析，这里主要记录一下自己的分析学习的流程</p>
 </blockquote>
 <a id="more"></a>
-<p><a href="https://null-me.github.io" target="_blank" rel="external">@小学生</a>是我学习逆向的道路上的基友，我们经常一起折腾东西。有一天@小学生 对我讲说：咦小马哥，我们做个拦截短信的插件吧。就这样我们折腾了这个东西，现在讲下大概思路：</p>
-<blockquote>
-<p>随着网络欺诈的日益壮大，越来越多的人被钓鱼网站欺骗造成个人信息泄露严重的还会造成经济上的损失，这类欺诈短信大部分是以短信的形式发给你说中奖了或者说你的apple账户有风险，一旦你点进去，输入了你的账号和密码来登录，你的apple账户就成功泄露了，那么我们改如何着手去做一个拦截钓鱼网站的插件呢？</p>
-</blockquote>
-<p>首先说到短信，既然是苹果系统自带的app，肯定遵循MVC架构，既然想要拦截钓鱼网站，肯定是要把它与正确的网址作对比，然后再出来个弹框提示这个可能是钓鱼网站，并由用户选择是否继续或者进入正确的网址，这样，大概的思路流程也就出来了。</p>
-<p>接下来，我们打开短信接发消息的界面，先看看他的视图层次。</p>
-<ul>
-<li>首先打开<code>短信</code>，远程连接到手机，我们需要输入<code>ps -e | grep /Applications</code> 来找到目标app的进程名</li>
-<li>然后我们向<code>短信</code>注入Cycript来打印视图层次</li>
-</ul>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020708@2x.jpg" alt="QQ20170104-020708@2x"></p>
-<p><code>[[[UIWindow keyWindow] rootViewController] _printHierarchy].toString()</code><br>可以来打印一些大范围的层次，这样一来看起来更加精简。</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-020844@2x.jpg" alt="QQ20170104-020844@2x"></p>
-<p>从打印出来的视图层次来看，我们所在收发消息界面的controller应该是CKMessagesController，其他的如：CKTranscriptCollectionViewController等都是苹果的私有框架，我们找到它后发现并没有找到一些关键信息</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-202705@2x.jpg" alt="QQ20170104-202705@2x"></p>
-<p>既然这样，我们先通过class-dump出他的头文件以备后续判断。<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021158@2x.jpg" alt="QQ20170104-021158"></p>
-<p>这时候，我们应该这样想，既然是要，点击这个链接后才执行判断以及警告，结合正向知识，应该是一个openURL之类的函数，我们把<code>短信</code>的二进制文件拖进hopper中，搜索openURL，结果看到有两个地方出现了分别是<code>-[SMSApplication applicationOpenURL:]:</code>和<code>-[SMSApplication openURL:]:</code></p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185651@2x.jpg" alt="QQ20170104-185651"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-192027@2x.jpg" alt="QQ20170104-192027"></p>
-<p>那么到底这两个中有没有我们所需呢？别着急，让我们祭起debugserver和lldb来印证猜想</p>
-<blockquote>
-<p>debugserver运行在iOS上，顾名思义，它作为服务端，实际执行LLDB（作为客户端）传过来的命令，再把执行结果反馈给LLDB<br>，显示给用户，即所谓的“远程调试”。</p>
-</blockquote>
-<p>首先<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-185946@2x.jpg" alt="QQ20170104-185946"></p>
-<p>然后查看他的ASLR偏移<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190810@2x.jpg" alt="QQ20170104-190810"></p>
-<p>接下来我们结合之前的偏移量和函数的地址来下断点<br>首先在第一个地方下断点后，我们点击短信中的链接时没有任何反应，</p>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-190747@2x.jpg" alt="QQ20170104-190747"></p>
-<p>然后我们在第二个地方下断点，结果在点击了链接后触发了断点，这是便初步印证了我们的猜想</p>
-<p>接下来我们在导出的头文件中找到SMSApplication.h文件，进去后找到一个具体的openURL函数，接下来就要着手写算法来判断是否为钓鱼网站了<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021322@2x.jpg" alt="QQ20170104-021322"></p>
-<p>这里我们通过分别遍历目标网址和正确网址的字符串，并计算相似度，如果相似度接近1或者过低就为正确网址，否则为钓鱼网址，然后我们在openURL中加上这个判断，再写上一个弹窗，出发点击事件，就可以完成我们的目标了。</p>
-<p><em>ps:在这里遇到一个正向开发的坑，之前的弹窗都是用UIAlerView，结果处理按钮点击事件的时候，arg1这个动态参数的值传不过来，请教了朋友之后才知道iOS8的新特性中使用UIAlertController，在UIAlertAction中通过block回调可以拿到这个动态参数</em></p>
-<p>最后我们编写完成tweak后注入到app中看看效果如何</p>
-<ul>
-<li><p>我们先在短信中输入<code>www.baudu.com</code>，然后点击它，会出现一个警告弹框<br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021738@2x.jpg" alt="QQ20170104-021738"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021751@2x.jpg" alt="QQ20170104-021751"></p>
-</li>
-<li><p>如果我们点击<code>继续前往</code>，就会继续进入这个网站</p>
-</li>
-</ul>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021816@2x.jpg" alt="QQ20170104-021816"></p>
-<ul>
-<li>如果点击<code>正确网址</code>，就会进入<code>百度</code>这个正确的网站</li>
-</ul>
-<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021848@2x.jpg" alt="QQ20170104-021848"><br><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170104-021859@2x.jpg" alt="QQ20170104-021859"></p>
-<p>这样我们最终就完成了这个拦截钓鱼网站的目标</p>
+<h2 id="0x0-感染方式"><a href="#0x0-感染方式" class="headerlink" title="0x0 感染方式"></a>0x0 感染方式</h2><p>该木马是由于黑客入侵了Handbrake的官网之后被替换的，这首先就让很多<code>以为在官网下载就不会出事</code>的人们尴尬了许多，下载安装的时候还算正常</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170706-155059@2x.png" alt="155059"></p>
+<h2 id="0x1-OSX-Proton-B"><a href="#0x1-OSX-Proton-B" class="headerlink" title="0x1 OSX / Proton.B"></a>0x1 OSX / Proton.B</h2><p>OSX / Proton.B主要做了以下几件事：</p>
+<ol>
+<li>当用户安装Handbrake软件时，一个木马程序被偷偷安装</li>
+<li>弹出弹框，诱使用户输入管理员密码，以执行高权限的指令</li>
+<li>与服务器通信，ssh以及上传文件到远程服务器，监听按键等</li>
+</ol>
+<h2 id="0x2-详细分析"><a href="#0x2-详细分析" class="headerlink" title="0x2 详细分析"></a>0x2 详细分析</h2><p>我们先来安装这个<code>Handbrake.dmg</code>文件</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170720-224731@2x.png" alt="224731"></p>
+<p>打开之后可以看到正常打开了这个视频转码器，但是过了几秒之后，突然弹出一个弹框</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170707-095637@2x.png" alt="095637"></p>
+<p>总之感觉莫名其妙，先乱输一个密码试试</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170707-095738@2x.png" alt="095738"></p>
+<p>结果发现，在Dock中很诡异的出现了几秒钟<code>终端</code>的身影，看来果然不安好心</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170707-100104@2x.png" alt="100104"></p>
+<p>提示密码错误后，我们继续输入正确密码，看看到底有什么花样<br>结果当然又调用了<code>终端</code>，然后在桌面上就基本上没什么改动了</p>
+<p>按理来说，外部平静的时候，其内部必然早已风起云涌，那就让我们走的再近一点吧</p>
+<p>我们首先打开活动监视器，可以看到出现了一个新的进程–<code>activity-agent</code>，猜想肯定是之前输入了管理员密码之后的一系列操作运行了它</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170707-103540@2x.png" alt="103540"></p>
+<p>当我们打开应用程序的<code>Resources</code>目录看一看有没有什么奇怪的东西</p>
+<p>表面看起来一切正常，但是仔细一看，在nib文件中，其他的文件都是几k，而这个<code>HBPlayHUDMainController.nib</code>文件要一点多兆，果然没有表面上的那么和谐~</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170720-224921@2x.png" alt="224921"></p>
+<p>我们在命令行中看一看，原来是个zip文件，那这样一来，我们之前输入了密码之后原程序做了一些操作来解压这个文件，既然是程序启动时做出的操作，又因为这个程序是用oc写的，那我们应该在AppDelegate中寻找答案！</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170710-222940@2x.png" alt="222940"></p>
+<p>我们一路找下去，看到一个[AppDelegate comrad:]，其中有bin/sh，这是要做一些编译？？我们动态调试进去先看看</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-150458@2x.png" alt="150458"></p>
+<p>结果发现了<code>pgrep -x activity_agent &amp;&amp; echo Queue.hbqueue</code>这条命令，意思就是当程序运行时检查系统中有没有<code>activity_agent</code>这个进程，有的话输出队列，没的话解压安装。可是我们又不知道密码怎么解压？别急，我们可以尝试直接把那些命令字符串dump下来。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-143605@2x.png" alt="143605"></p>
+<p>dump之后我们可以看到一些命令，是说要去运行/tmp中的名叫HandBack的程序？？</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170720-230146@2x.png" alt="230146"></p>
+<p>别急，我们先解压看看</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-110207@2x.png" alt="110207"></p>
+<p>与此同时，在活动监视器中我们可以看到出现了这个进程<code>HandBack</code>，打开后果然印证了。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170710-152322@2x.png" alt="152322"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170710-152412@2x.png" alt="152412"></p>
+<p>那这样说来，我们当前在动态调试的<code>HandBack</code>已经没用了，接下来我们就要转战第二战场–tmp。</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170707-115307@2x.png" alt="115307"></p>
+<p>找到tmp目录中的.app文件，打开之后我们直接来动态调试，结果发现有反调试保护，我们直接给ptrace下断点看看是不是，因为Mac上反调试的手段相对别的来说还是比较少的。果不其然，我们在触发了断点之后直接<code>thread return</code>来绕过，看看<code>rdi</code>，猜想是对路径中的<code>.hash</code>文件一些操作或改动</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-164813@2x.png" alt="164813"></p>
+<p>不得不说这个<code>.hash</code>文件很有问题，我们都知道以”.”开头的文件在默认情况下都是隐藏的，它越这样越说明它有很大的问题！</p>
+<p>紧接着我们在地址<code>sub_10001e690()</code>的伪代码中找到一个方法</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-162325@2x.png" alt="162325"></p>
+<p>点进去之后看到，原来这就是用来解密<code>.hash</code>文件的方法，看了看密钥没有被硬编码，那我们就继续动态调试，直接给地址下断点之后触发</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-162433@2x.png" alt="162433"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-165101@2x.png" alt="165101"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170711-165119@2x.png" alt="165119"></p>
+<p>这样我们就轻而易举的拿到了密钥~</p>
+<p>接下来让我们来解密.hash文件，解密之后是这样的</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170724-142059@2x.png" alt="142059"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170724-142912@2x.png" alt="142912"></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170724-143447@2x.png" alt="143447"></p>
+<p>然后通过密码破解之后可以看到非常多的指令，放眼望去，基本上这个恶意软件要做什么怎么做都写的很清楚了。</p>
+<p>先和之前一样强制性的让你输入管理员密码，拿到root权限之后就开始手机你的浏览器中或者其他地方一些重要的信息<br>然后通过nc激活监听，成功后把拿到的数据上传到服务器</p>
+<p>所以接下来的事情不言而喻……</p>
+<h2 id="0x3-总结"><a href="#0x3-总结" class="headerlink" title="0x3 总结"></a>0x3 总结</h2><p>以上的分析基本上概括了这个恶意软件由下载到执行再到对受害者造成危害的一系列流程，就和之前的针对macOS平台的全功能勒索软件<code>KeRanger</code>一样，受害者是从正规的途径收到伤害，这可真的是让大部分人防不胜防啊。但是细心的你如果从一开始输入密码时就看到那个<em>一闪而逝</em>的终端进程时，如果够警惕，立马kill进程卸载软件，就能很大程度的避免。</p>
+<p>苹果在后来的特征库中好像加了这个，其中就有上一篇文章中的<a href="http://bobao.360.cn/learning/detail/4071.html" target="_blank" rel="external">http://bobao.360.cn/learning/detail/4071.html</a></p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170724-145833@2x.png" alt="145833"></p>
+<p>不过你看看，我们今天讨论的这个Proton.B，这样只通过一个sha-1来验证的话可能没有什么太大的用处</p>
+<p><img src="http://oh5mz2415.bkt.clouddn.com/QQ20170724-150551@2x.png" alt="150551"></p>
+<p>因为这样只需要稍微修改一下二进制文件就能绕过了~</p>
+<h2 id="0x4-参考"><a href="#0x4-参考" class="headerlink" title="0x4 参考"></a>0x4 参考</h2><p><a href="https://objective-see.com/blog/blog_0x1D.html" target="_blank" rel="external">https://objective-see.com/blog/blog_0x1D.html</a><br><a href="https://objective-see.com/blog/blog_0x1F.html" target="_blank" rel="external">https://objective-see.com/blog/blog_0x1F.html</a><br><a href="https://www.cybereason.com/labs-proton-b-what-this-mac-malware-actually-does/" target="_blank" rel="external">https://www.cybereason.com/labs-proton-b-what-this-mac-malware-actually-does/</a></p>
 
       
     </div>
@@ -362,13 +382,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2017/05/22/thi-Blog/">关于短信拦截插件SMSAnti的实现</a></p>
+        <p><span>本文标题:</span><a href="/2017/07/24/360Three/">了解关于macOS上的恶意木马——OSX / Proton.B</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">凌迟</a></p>
-        <p><span>发布时间:</span>2017-05-22, 15:15:38</p>
-        <p><span>最后更新:</span>2017-05-22, 15:31:10</p>
+        <p><span>发布时间:</span>2017-07-24, 16:35:02</p>
+        <p><span>最后更新:</span>2017-07-24, 16:37:38</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2017/05/22/thi-Blog/" title="关于短信拦截插件SMSAnti的实现">http://Hello-Sherlock.github.io/2017/05/22/thi-Blog/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/05/22/thi-Blog/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2017/07/24/360Three/" title="了解关于macOS上的恶意木马——OSX / Proton.B">http://Hello-Sherlock.github.io/2017/07/24/360Three/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://Hello-Sherlock.github.io/2017/07/24/360Three/　　作者: 凌迟" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -380,16 +400,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2017/07/06/360One/">
-                    浅谈macRansom
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2017/05/18/twe-Blog/">
-                    浅析mach_portal（3）— CVE-2016-7661
+                <a href="/2017/07/07/360Two/">
+                    了解macOS上的恶意木马--OSX/Dok
                 </a>
             </div>
         
@@ -401,7 +415,7 @@
     <div id="toc" class="toc-article">
         <strong class="toc-title">文章目录</strong>
         
-            
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x0-感染方式"><span class="toc-number">1.</span> <span class="toc-text">0x0 感染方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x1-OSX-Proton-B"><span class="toc-number">2.</span> <span class="toc-text">0x1 OSX / Proton.B</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x2-详细分析"><span class="toc-number">3.</span> <span class="toc-text">0x2 详细分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x3-总结"><span class="toc-number">4.</span> <span class="toc-text">0x3 总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x4-参考"><span class="toc-number">5.</span> <span class="toc-text">0x4 参考</span></a></li></ol>
         
     </div>
     <style>
@@ -437,7 +451,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"关于短信拦截插件SMSAnti的实现　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"了解关于macOS上的恶意木马——OSX / Proton.B　| 凌迟　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -466,15 +480,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2017/07/06/360One/" title="上一篇: 浅谈macRansom">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2017/05/18/twe-Blog/" title="下一篇: 浅析mach_portal（3）— CVE-2016-7661">
+            <a href="/2017/07/07/360Two/" title="下一篇: 了解macOS上的恶意木马--OSX/Dok">
                 <i class="fa fa-angle-right"></i>
             </a>
         
